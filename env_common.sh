@@ -14,8 +14,9 @@ SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-moonshotai/Kimi-K3}"
 # Built by 01_build_push.sh on B300-1, pushed to ECR, pulled on the others.
 # The tag carries every pin (vllm sha, DeepEP sha, NCCL, EFA) so two images can
 # never be confused in a comparison.
-AWS_REGION="${AWS_REGION:-ap-south-2}"
-ECR_REGISTRY="${ECR_REGISTRY:-579019700964.dkr.ecr.${AWS_REGION}.amazonaws.com}"
+# Not AWS_REGION: a laptop-side AWS_REGION would silently retarget the registry.
+K3V_REGION="${K3V_REGION:-ap-south-2}"
+ECR_REGISTRY="${ECR_REGISTRY:-579019700964.dkr.ecr.${K3V_REGION}.amazonaws.com}"
 ECR_REPO="${ECR_REPO:-kimi-k3-vllm-b300}"
 IMAGE_TAG="${IMAGE_TAG:-vllm77154ca-deepep6de427b-nccl2312-efa1.50.0}"
 IMAGE="${IMAGE:-${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}}"
@@ -214,7 +215,7 @@ remove_container() {
 require_image() {
     docker image inspect "$IMAGE" >/dev/null 2>&1 && return 0
     echo "image $IMAGE not local -- pulling" >&2
-    aws ecr get-login-password --region "$AWS_REGION" \
+    aws ecr get-login-password --region "$K3V_REGION" \
         | docker login --username AWS --password-stdin "$ECR_REGISTRY" >/dev/null
     docker pull "$IMAGE"
 }

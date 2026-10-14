@@ -32,7 +32,7 @@ case "${1:-}" in
         done ;;
     pull-image)
         for h in $HOSTS; do
-            ( "${SSH[@]}" "$h" "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY >/dev/null && docker pull -q $IMAGE >/dev/null && echo \"$h: \$(docker image inspect -f '{{.Id}}' $IMAGE)\"" ) &
+            ( "${SSH[@]}" "$h" "aws ecr get-login-password --region $K3V_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY >/dev/null && docker pull -q $IMAGE >/dev/null && echo \"$h: \$(docker image inspect -f '{{.Id}}' $IMAGE)\"" ) &
         done; wait ;;
     results)
         mkdir -p results
