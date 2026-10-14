@@ -155,6 +155,17 @@ build_common_envs() {
     return 0
 }
 
+# Cross-node TP (prefill, decode `tp`) on p6-b300, which is NOT an NVL72: every
+# vLLM feature that does a torch symmetric-memory rendezvous over the whole TP
+# group needs NVLink multicast across nodes, and instead of failing cleanly some
+# ranks skip it while the rest block in rendezvous() forever. Two hit K3:
+#   custom all-reduce's MNNVL probe -> --disable-custom-all-reduce (flag)
+#   Kimi-K3's fused GEMM+all-reduce -> VLLM_KIMI_K3_GEMM_AR=0 (env), which hangs
+#                                      inside the model ctor with 7 of 8 GPUs at
+#                                      4.8 GB and the 8th fully loaded.
+MULTINODE_TP_ARGS=(--disable-custom-all-reduce)
+MULTINODE_TP_ENVS=(-e VLLM_KIMI_K3_GEMM_AR=0)
+
 # Extra -e flags for DeepEP v2 (decode deepep_v2 arm only).
 build_deepep_envs() {
     DEEPEP_ENVS=(

@@ -75,8 +75,7 @@ case "$DECODE_MODE" in
             --max-num-batched-tokens "${DECODE_MAX_BATCHED:-$(( DECODE_TOTAL_SEQS * 4 ))}"
         )
         (( NODE_RANK > 0 )) && ARGS+=(--headless)
-        # Same MNNVL rendezvous deadlock as prefill -- see 20_launch_prefill.sh.
-        (( NNODES > 1 )) && ARGS+=(--disable-custom-all-reduce)
+        if (( NNODES > 1 )); then ARGS+=("${MULTINODE_TP_ARGS[@]}"); EXTRA_ENVS+=("${MULTINODE_TP_ENVS[@]}"); fi   # see env_common.sh
         NIXL_HOST="$DECODE_HEAD"
         ;;
     *)
