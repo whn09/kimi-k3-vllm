@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 PAT = re.compile(
-    r"k3v_pd2p2d_kv-(?P<kv>[a-z]+)_dec-(?P<mode>[a-z_0-9]+)_seqs(?P<seqs>\d+)_isl(?P<isl>\d+)"
+    r"k3v_pd2p2d_kv-(?P<kv>[a-z]+)_dec-(?P<mode>[a-z_0-9]+)_sms(?P<sms>\d+)_seqs(?P<seqs>\d+)_isl(?P<isl>\d+)"
     r"_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)_(?P<ts>[\d-]+)\.json$"
 )
 ORDER = {"deepep_v2": 0, "agrs": 1, "tp": 2}
@@ -27,7 +27,7 @@ def main(root: str) -> None:
             bad.append(p.name)
             continue
         d = json.loads(p.read_text())
-        k = (m["kv"], m["mode"], int(m["seqs"]), int(m["isl"]), int(m["osl"]), int(m["conc"]))
+        k = (m["kv"], m["mode"] if m["mode"] != "deepep_v2" else f"deepep_v2/sm{m['sms']}", int(m["seqs"]), int(m["isl"]), int(m["osl"]), int(m["conc"]))
         if k not in rows or m["ts"] > rows[k][0]:
             rows[k] = (m["ts"], int(m["n"]), d)
 

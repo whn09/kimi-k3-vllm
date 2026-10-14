@@ -18,7 +18,7 @@ SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-moonshotai/Kimi-K3}"
 K3V_REGION="${K3V_REGION:-ap-south-2}"
 ECR_REGISTRY="${ECR_REGISTRY:-579019700964.dkr.ecr.${K3V_REGION}.amazonaws.com}"
 ECR_REPO="${ECR_REPO:-kimi-k3-vllm-b300}"
-IMAGE_TAG="${IMAGE_TAG:-vllm77154ca-deepep6de427b-nccl2312-efa1.50.0}"
+IMAGE_TAG="${IMAGE_TAG:-vllm77154ca-deepep6de427b-nccl2312-efa1.50.0-sms1}"
 IMAGE="${IMAGE:-${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}}"
 
 # ---- JIT / autotune caches persisted on the host ----
@@ -108,6 +108,8 @@ NODE_RANK="${NODE_RANK:-0}"
 #              ParallelConfig.use_sequence_parallel_moe): every rank sees every
 #              token and the MoE output is all-reduced over 16 ranks.
 DECODE_MODE="${DECODE_MODE:-deepep_v2}"
+# DeepEP v2 SM count on decode (deepep_v2 arm). 12 measured better than auto on EFA.
+DEEPEP_NUM_SMS="${DEEPEP_NUM_SMS:-12}"
 
 # Matched admission. The DP arms admit DECODE_SEQS_PER_RANK per DP rank, i.e.
 # 16x that in total; the TP arm is one engine, so it gets the same TOTAL.
@@ -159,6 +161,9 @@ build_deepep_envs() {
         -e NCCL_GIN_TYPE="$GIN_TYPE"
         -e NCCL_SYM_GIN_KERNELS_ENABLE=0
         -e VLLM_DEEPEP_V2_ALLOW_HYBRID_MODE=1
+        # patches/deepep_v2_num_sms.py. 0 = DeepEP's own pick, which under
+        # vLLM's default PREFER_OVERLAP=0 is >= 64 SMs.
+        -e VLLM_DEEPEP_V2_NUM_SMS="$DEEPEP_NUM_SMS"
     )
     [[ -n "$EFA_HCA" ]] && DEEPEP_ENVS+=(-e NCCL_IB_HCA="$EFA_HCA")
     return 0

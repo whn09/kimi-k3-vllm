@@ -134,6 +134,11 @@ ARG VLLM_ROUTER_VER=
 RUN pip install --no-cache-dir "vllm-router${VLLM_ROUTER_VER:+==$VLLM_ROUTER_VER}" && \
     which vllm-router
 
+# VLLM_DEEPEP_V2_NUM_SMS: vLLM otherwise lets DeepEP pick >= 64 SMs (see the
+# patch's docstring). Late layer so iterating on it does not rebuild DeepEP.
+COPY patches/ /opt/k3v-patches/
+RUN python3 /opt/k3v-patches/deepep_v2_num_sms.py "$(python3 -c 'import vllm, os; print(os.path.dirname(vllm.__file__))')"
+
 # Preflight. No GPU during `docker build`, so anything that dlopen()s libcuda
 # runs with the CUDA stubs on the path.
 RUN set -eu; \
@@ -150,6 +155,8 @@ RUN set -eu; \
     python3 -c "from vllm.utils.import_utils import deep_ep_v2_unavailable_reason as r; x = r(); print('vllm deepep_v2:', x or 'available'); assert x is None" \
       || echo "WARN: deepep_v2 availability probe failed under the libcuda stub (it reads the runtime NCCL version); re-checked at launch"; \
     python3 -c "import vllm.models.kimi_k3; print('vllm kimi_k3 OK')"; \
+    grep -q VLLM_DEEPEP_V2_NUM_SMS "$(python3 -c 'import vllm, os; print(os.path.dirname(vllm.__file__))')/model_executor/layers/fused_moe/prepare_finalize/deepep_v2.py" \
+      || { echo "FATAL: VLLM_DEEPEP_V2_NUM_SMS patch missing"; exit 1; }; \
     python3 -c "from mooncake.engine import TransferEngine; print('mooncake TransferEngine OK')"; \
     NV=$(python3 -c "import importlib.metadata as m; print(m.version('nvidia-nccl-cu13'))"); \
     python3 -c "import sys; v=tuple(int(x) for x in '$NV'.split('.')[:2]); sys.exit(0 if v >= (2,31) else 1)" \

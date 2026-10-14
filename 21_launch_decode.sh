@@ -103,5 +103,5 @@ docker run -d --name "$NAME" \
     "$IMAGE" "${ARGS[@]}"
 
 echo "launched '$NAME'  mode=$DECODE_MODE  node-rank=$NODE_RANK/$NNODES  total-seqs=$DECODE_TOTAL_SEQS  ->  docker logs -f $NAME"
-[[ "$DECODE_MODE" == deepep_v2 ]] && echo "  gin=$GIN_TYPE hca=${EFA_HCA:-<none>}"
+[[ "$DECODE_MODE" == deepep_v2 ]] && echo "  gin=$GIN_TYPE hca=${EFA_HCA:-<none>} deepep-sms=$DEEPEP_NUM_SMS"
 exit 0
