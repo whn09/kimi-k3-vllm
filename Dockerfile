@@ -24,10 +24,13 @@ USER root
 ENV DEBIAN_FRONTEND=noninteractive
 
 # libhwloc15: NIXL's libplugin_LIBFABRIC.so links libhwloc.so.15, which the
-# nightly does not have either. libdw-dev: DeepEP's JIT.
+# nightly does not have either. libdw-dev: DeepEP's JIT. cusparse/cusolver dev:
+# the nightly's CUDA is trimmed, and torch's CUDAContextLight.h (included by any
+# torch C++ extension, i.e. DeepEP) needs cusparse.h and cusolverDn.h.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git cmake build-essential wget curl patch pciutils \
         autoconf automake libtool libhwloc15 libdw-dev \
+        libcusparse-dev-13-0 libcusolver-dev-13-0 \
     && rm -rf /var/lib/apt/lists/*
 
 ARG GDRCOPY_VERSION=2.5.2
