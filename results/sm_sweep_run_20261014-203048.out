@@ -1,0 +1,231 @@
+plan: sms=[12 0] x reps=2  seqs/rank=64 (side cap 1024)  ISL/OSL=1024/2048  concs=[<91_bench default>]
+### prefill (TP16) on B300-1+B300-2
+  already healthy -- reusing
+### deepep_v2_sms12_r1
+27c1ca2946008557f98db4e9623624749ec5807f53ff341a49802eb173de2469
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+7bedc99702882a6fe3627c04c1d2198f7345b98850d9edddb5abf5c1395dc140
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+fcce55b1c8b715d6f1f86a02a9880ace25b39551874cb3f035194e59dda79184
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=12 (requested 12; 0 = auto)
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c256_n512_r1_20261014-124555  (resolved sms=12)
+Successful requests:                     512       
+Benchmark duration (s):                  276.02    
+Output token throughput (tok/s):         3798.94   
+Mean TTFT (ms):                          7155.84   
+Median TTFT (ms):                        3618.81   
+Mean TPOT (ms):                          62.88     
+Median TPOT (ms):                        62.92     
+P99 TPOT (ms):                           63.02     
+Median ITL (ms):                         63.08     
+P99 ITL (ms):                            66.71     
+sampler: max_running=256/256 sat_window=245s sat_gen_tok_s=4040.2602152423287
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c512_n1024_r1_20261014-125047  (resolved sms=12)
+Successful requests:                     1024      
+Benchmark duration (s):                  332.60    
+Output token throughput (tok/s):         6305.37   
+Mean TTFT (ms):                          5405.56   
+Median TTFT (ms):                        4464.61   
+Mean TPOT (ms):                          76.47     
+Median TPOT (ms):                        76.56     
+P99 TPOT (ms):                           76.86     
+Median ITL (ms):                         76.93     
+P99 ITL (ms):                            83.65     
+sampler: max_running=512/512 sat_window=303s sat_gen_tok_s=6518.429076806373
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c1024_n2048_r1_20261014-125637  (resolved sms=12)
+Successful requests:                     2048      
+Benchmark duration (s):                  397.95    
+Output token throughput (tok/s):         10539.74  
+Mean TTFT (ms):                          11003.70  
+Median TTFT (ms):                        8997.82   
+Mean TPOT (ms):                          87.48     
+Median TPOT (ms):                        87.26     
+P99 TPOT (ms):                           88.43     
+Median ITL (ms):                         88.18     
+P99 ITL (ms):                            103.66    
+sampler: max_running=1024/1024 sat_window=346s sat_gen_tok_s=11101.53679691525
+pulled <- B300-1
+### deepep_v2_sms0_r1
+d152e46dd496a5465777da71c845a200d460a5ed4b4bb263ddf2712ce1396f64
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+6218f46cb6ca941a086851c11241b5475da27280ede3ecf039d838a04a1c86e7
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+36c67d4eef8135032fd0a180fbdde6a6da5b121da947fda3958a8f0c9f9a116c
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=64 (requested 0; 0 = auto)
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c256_n512_r1_20261014-131909  (resolved sms=64)
+Successful requests:                     512       
+Benchmark duration (s):                  294.09    
+Output token throughput (tok/s):         3565.46   
+Mean TTFT (ms):                          1661.18   
+Median TTFT (ms):                        1261.47   
+Mean TPOT (ms):                          70.72     
+Median TPOT (ms):                        70.61     
+P99 TPOT (ms):                           70.87     
+Median ITL (ms):                         70.86     
+P99 ITL (ms):                            74.89     
+sampler: max_running=256/256 sat_window=285s sat_gen_tok_s=3604.433505830031
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c512_n1024_r1_20261014-132416  (resolved sms=64)
+Successful requests:                     1024      
+Benchmark duration (s):                  364.43    
+Output token throughput (tok/s):         5754.53   
+Mean TTFT (ms):                          2493.62   
+Median TTFT (ms):                        1449.15   
+Mean TPOT (ms):                          87.22     
+Median TPOT (ms):                        87.22     
+P99 TPOT (ms):                           87.47     
+Median ITL (ms):                         87.40     
+P99 ITL (ms):                            95.20     
+sampler: max_running=512/512 sat_window=351s sat_gen_tok_s=5841.178943208661
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c1024_n2048_r1_20261014-133038  (resolved sms=64)
+Successful requests:                     2048      
+Benchmark duration (s):                  419.65    
+Output token throughput (tok/s):         9994.79   
+Mean TTFT (ms):                          3952.48   
+Median TTFT (ms):                        1603.56   
+Mean TPOT (ms):                          99.42     
+Median TPOT (ms):                        99.51     
+P99 TPOT (ms):                           99.71     
+Median ITL (ms):                         99.50     
+P99 ITL (ms):                            116.50    
+sampler: max_running=1024/1024 sat_window=393s sat_gen_tok_s=10241.317828306881
+pulled <- B300-1
+### deepep_v2_sms12_r2
+cf5cd88e5fc8bb3fa26be95f6f92b10b88002fce52d133204de27b282c176041
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+624d03ccf9ed8b55464dcbba8a25c8ae5fbed1783c01fba1af9301cf610358ad
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+65af7b1efb80d7a29ce3eac7980e267c5e71c59a9ec6b265a1f2ba8f9fb42fef
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=12 (requested 12; 0 = auto)
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c256_n512_r2_20261014-135431  (resolved sms=12)
+Successful requests:                     512       
+Benchmark duration (s):                  261.74    
+Output token throughput (tok/s):         4006.22   
+Mean TTFT (ms):                          1628.75   
+Median TTFT (ms):                        1212.74   
+Mean TPOT (ms):                          62.83     
+Median TPOT (ms):                        62.83     
+P99 TPOT (ms):                           62.89     
+Median ITL (ms):                         62.98     
+P99 ITL (ms):                            66.81     
+sampler: max_running=256/256 sat_window=250s sat_gen_tok_s=4055.9954074042616
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c512_n1024_r2_20261014-135907  (resolved sms=12)
+Successful requests:                     1024      
+Benchmark duration (s):                  321.93    
+Output token throughput (tok/s):         6514.34   
+Mean TTFT (ms):                          2405.28   
+Median TTFT (ms):                        1325.57   
+Mean TPOT (ms):                          76.87     
+Median TPOT (ms):                        76.91     
+P99 TPOT (ms):                           77.09     
+Median ITL (ms):                         77.12     
+P99 ITL (ms):                            84.07     
+sampler: max_running=512/512 sat_window=308s sat_gen_tok_s=6624.136819953073
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c1024_n2048_r2_20261014-140446  (resolved sms=12)
+Successful requests:                     2048      
+Benchmark duration (s):                  374.34    
+Output token throughput (tok/s):         11204.63  
+Mean TTFT (ms):                          3854.32   
+Median TTFT (ms):                        1472.59   
+Mean TPOT (ms):                          88.39     
+Median TPOT (ms):                        88.48     
+P99 TPOT (ms):                           88.73     
+Median ITL (ms):                         88.59     
+P99 ITL (ms):                            101.53    
+sampler: max_running=1024/1024 sat_window=346s sat_gen_tok_s=11504.921704532559
+pulled <- B300-1
+### deepep_v2_sms0_r2
+ec3f205ae184ffa3dd951db495dbca1d82c96fcf3718086f84ca6caa63c42d3b
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+24f1e45cff132f1c2c17dc88dfd71605af846d3375b555cbfbfa7fbd51abf13d
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+59d372769f21b22a58ff7e6a24fee2bfeae8913e4501dcfb1585568dc1e30aa2
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=64 (requested 0; 0 = auto)
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c256_n512_r2_20261014-142716  (resolved sms=64)
+Successful requests:                     512       
+Benchmark duration (s):                  294.65    
+Output token throughput (tok/s):         3558.66   
+Mean TTFT (ms):                          1714.18   
+Median TTFT (ms):                        1391.51   
+Mean TPOT (ms):                          70.83     
+Median TPOT (ms):                        70.83     
+P99 TPOT (ms):                           70.88     
+Median ITL (ms):                         70.99     
+P99 ITL (ms):                            74.98     
+sampler: max_running=256/256 sat_window=282s sat_gen_tok_s=3597.8242515953666
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c512_n1024_r2_20261014-143224  (resolved sms=64)
+Successful requests:                     1024      
+Benchmark duration (s):                  364.49    
+Output token throughput (tok/s):         5753.63   
+Mean TTFT (ms):                          2435.34   
+Median TTFT (ms):                        1407.47   
+Mean TPOT (ms):                          87.26     
+Median TPOT (ms):                        87.30     
+P99 TPOT (ms):                           87.46     
+Median ITL (ms):                         87.45     
+P99 ITL (ms):                            95.27     
+sampler: max_running=512/512 sat_window=351s sat_gen_tok_s=5838.648736262803
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c1024_n2048_r2_20261014-143846  (resolved sms=64)
+Successful requests:                     2048      
+Benchmark duration (s):                  419.75    
+Output token throughput (tok/s):         9992.38   
+Mean TTFT (ms):                          3913.88   
+Median TTFT (ms):                        1562.14   
+Mean TPOT (ms):                          99.45     
+Median TPOT (ms):                        99.55     
+P99 TPOT (ms):                           99.77     
+Median ITL (ms):                         99.57     
+P99 ITL (ms):                            116.05    
+sampler: max_running=1024/1024 sat_window=392s sat_gen_tok_s=10239.377986487792
+pulled <- B300-1
+| kv | ISL/OSL | conc | SM (req -> used) | reps | decode-full tok/s | max running / target | TPOT p50 (ms) | ITL p50 (ms) | TPOT p99 (ms) | client out tok/s | dur (s) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| nixl | 1024/2048 | 256 | 12 -> 12 | 2 | 4048 [4040-4056] | 256 / 256 | 62.87 [62.83-62.92] | 63.03 [62.98-63.08] | 62.96 [62.89-63.02] | 3903 [3799-4006] | 269 [262-276] |
+| nixl | 1024/2048 | 256 | auto -> 64 | 2 | 3601 [3598-3604] | 256 / 256 | 70.72 [70.61-70.83] | 70.92 [70.86-70.99] | 70.88 [70.87-70.88] | 3562 [3559-3565] | 294 [294-295] |
+| nixl | 1024/2048 | 512 | 12 -> 12 | 2 | 6571 [6518-6624] | 512 / 512 | 76.74 [76.56-76.91] | 77.02 [76.93-77.12] | 76.97 [76.86-77.09] | 6410 [6305-6514] | 327 [322-333] |
+| nixl | 1024/2048 | 512 | auto -> 64 | 2 | 5840 [5839-5841] | 512 / 512 | 87.26 [87.22-87.30] | 87.42 [87.40-87.45] | 87.47 [87.46-87.47] | 5754 [5754-5755] | 364 [364-364] |
+| nixl | 1024/2048 | 1024 | 12 -> 12 | 2 | 11303 [11102-11505] | 1024 / 1024 | 87.87 [87.26-88.48] | 88.38 [88.18-88.59] | 88.58 [88.43-88.73] | 10872 [10540-11205] | 386 [374-398] |
+| nixl | 1024/2048 | 1024 | auto -> 64 | 2 | 10240 [10239-10241] | 1024 / 1024 | 99.53 [99.51-99.55] | 99.54 [99.50-99.57] | 99.74 [99.71-99.77] | 9994 [9992-9995] | 420 [420-420] |
+
+**SM12 vs auto** (positive tok/s and negative TPOT favour SM12; noise = larger of the two arms' own max-min spread)
+
+| kv | ISL/OSL | conc | Δ decode-full tok/s | Δ TPOT p50 | noise (tok/s / TPOT) | verdict |
+|---|---|---|---|---|---|---|
+| nixl | 1024/2048 | 256 | +12.4% | -11.1% | 0.4% / 0.3% | beats noise |
+| nixl | 1024/2048 | 512 | +12.5% | -12.1% | 1.6% / 0.5% | beats noise |
+| nixl | 1024/2048 | 1024 | +10.4% | -11.7% | 3.6% / 1.4% | beats noise |

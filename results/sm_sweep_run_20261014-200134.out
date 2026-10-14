@@ -1,0 +1,38 @@
+plan: sms=[12 0] x reps=2  seqs/rank=64 (side cap 1024)  ISL/OSL=1024/2048  concs=[<91_bench default>]
+### prefill (TP16) on B300-1+B300-2
+6ce353ad3c740157360f87854e3d4c4914809e89a439af3d801d387b65faae41
+launched 'k3v-prefill'  node-rank=0/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+bd4d94071153c587ffc6408e9c4e55fe90ce46df4fd8fecdfdd43dcec62bbb89
+launched 'k3v-prefill'  node-rank=1/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+  (headless: never binds :8001)
+  healthy: 172.31.10.219:8001
+### deepep_v2_sms12_r1
+88986fbcd618f3aa66cc9aa769f1004b2a491354305a12e2ed802ccd36b9b20f
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+db31b552c1a7d3fd1720afc27d5f8e5fd4157ef721f51e26e26c009132a499bb
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+d1ac8411b262e51823d44a4cb0af168601d990bd5e34da594e2243adaba2d0a4
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=12 (requested 12; 0 = auto)
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c256_n512_r1_20261014-122109  (resolved sms=12)
+sampler: max_running=0/256 sat_window=0s sat_gen_tok_s=None
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c512_n1024_r1_20261014-122120  (resolved sms=12)
+sampler: max_running=0/512 sat_window=0s sat_gen_tok_s=None
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms12_seqs1024_isl1024_osl2048_c1024_n2048_r1_20261014-122130  (resolved sms=12)
+sampler: max_running=0/1024 sat_window=0s sat_gen_tok_s=None
+pulled <- B300-1
+### deepep_v2_sms0_r1
+1283faaab29253bebd05094dc81587bc86575eafe5966503fba23bb4568b662d
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+9fe8cc9a703dc58e09afae3c30b0abe6327e6d6ef3857b7b82a3b238d47804b0
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
