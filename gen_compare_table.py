@@ -14,7 +14,7 @@ from pathlib import Path
 
 PAT = re.compile(
     r"k3v_pd2p2d_kv-(?P<kv>[a-z]+)_dec-(?P<mode>[a-z_0-9]+)_sms(?P<sms>\d+)_seqs(?P<seqs>\d+)_isl(?P<isl>\d+)"
-    r"_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)_(?P<ts>[\d-]+)\.json$"
+    r"_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)(?:_r(?P<rep>\d+))?_(?P<ts>[\d-]+)\.json$"
 )
 ORDER = {"deepep_v2": 0, "agrs": 1, "tp": 2}
 
@@ -22,6 +22,8 @@ ORDER = {"deepep_v2": 0, "agrs": 1, "tp": 2}
 def main(root: str) -> None:
     rows, bad = {}, []
     for p in sorted(Path(root).glob("k3v_*.json")):
+        if p.name.endswith(".decode.json"):
+            continue
         m = PAT.search(p.name)
         if not m:
             bad.append(p.name)

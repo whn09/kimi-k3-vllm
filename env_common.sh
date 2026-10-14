@@ -115,7 +115,10 @@ DEEPEP_NUM_SMS="${DEEPEP_NUM_SMS:-12}"
 # 16x that in total; the TP arm is one engine, so it gets the same TOTAL.
 # Without this the TP arm is capped at 1/16 of the concurrency and the bench
 # measures the admission wall instead of the MoE path.
-DECODE_SEQS_PER_RANK="${DECODE_SEQS_PER_RANK:-8}"
+# 64/rank = 1024 per decode side: high enough that the bench can FILL decode
+# (the recipe's 8/rank caps the side at 128 concurrent). vLLM's default decode
+# graph capture covers min(2 x max_num_seqs, max_num_batched_tokens) = 128 here.
+DECODE_SEQS_PER_RANK="${DECODE_SEQS_PER_RANK:-64}"
 DECODE_TOTAL_SEQS=$(( DECODE_SEQS_PER_RANK * 16 ))
 
 # ---- per-side serving knobs (recipe defaults) ----
