@@ -43,6 +43,7 @@ RUN cd /tmp && \
 ARG EFA_INSTALLER_VERSION=1.50.0
 ENV K3_EFA_INSTALLER=${EFA_INSTALLER_VERSION}
 RUN set -eu; \
+    apt-get update; \
     cd /tmp; \
     curl -fSL --retry 3 -O https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VERSION}.tar.gz; \
     tar xzf aws-efa-installer-${EFA_INSTALLER_VERSION}.tar.gz; \
