@@ -43,7 +43,7 @@ run() {   # run <conc> <num_prompts> <tag>
             --endpoint /v1/completions \
             --model "$SERVED_MODEL_NAME" --tokenizer "$MODEL_PATH" --trust-remote-code \
             --dataset-name random --random-input-len "$ISL" --random-output-len "$OSL" \
-            --random-range-ratio 1.0 --ignore-eos \
+            --random-range-ratio 0 --ignore-eos \
             --num-prompts "$2" --max-concurrency "$1" \
             --percentile-metrics ttft,tpot,itl,e2el --metric-percentiles 50,90,99 \
             --save-result --result-dir /results --result-filename "$3.json"
@@ -64,6 +64,13 @@ for c in $CONCS; do
     spid=$!
     run "$c" "$n" "$tag" 2>&1 | tee "$OUT/$tag.log" | grep -E "Successful|Benchmark duration|Output token throughput|Mean TTFT|Median TTFT|Mean TPOT|Median TPOT|P99 TPOT|Median ITL|P99 ITL" || true
     kill -INT "$spid"; wait "$spid" || true
+    # A bench that dies before sending a request still "finishes" -- in 10 s, with
+    # the sampler reporting max_running=0. No result JSON = a failed run, stop.
+    if [[ ! -s "$OUT/$tag.json" ]]; then
+        echo "FATAL: vllm bench serve wrote no $tag.json -- tail of its log:" >&2
+        tail -5 "$OUT/$tag.log" >&2
+        exit 1
+    fi
     python3 - "$OUT/$tag.decode.json" <<PY
 import json, sys
 p = sys.argv[1]; d = json.load(open(p))
