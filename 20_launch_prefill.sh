@@ -21,6 +21,7 @@ require_image
 build_cache_args
 build_gdr_args
 build_common_envs
+build_kv_envs
 
 ARGS=(
     vllm serve "$MODEL_PATH"
@@ -52,11 +53,11 @@ docker run -d --name "$NAME" \
     --shm-size=600g \
     -v "$HOST_MODEL_DIR/Kimi-K3:$MODEL_PATH:ro" \
     "${CACHE_ARGS[@]}" \
-    "${COMMON_ENVS[@]}" \
+    "${COMMON_ENVS[@]}" "${KV_ENVS[@]}" \
     -e VLLM_NIXL_SIDE_CHANNEL_HOST="$PREFILL_HEAD" \
     -e VLLM_NIXL_SIDE_CHANNEL_PORT="$PREFILL_NIXL_PORT" \
     -e VLLM_KIMI_K3_SHARD_SP_SHARED_EXPERT=1 \
-    -e K3V_ROLE=prefill -e K3V_NODE_RANK="$NODE_RANK" \
+    -e K3V_ROLE=prefill -e K3V_NODE_RANK="$NODE_RANK" -e K3V_KV_CONNECTOR="$KV_CONNECTOR" \
     "$IMAGE" "${ARGS[@]}"
 
 echo "launched '$NAME'  node-rank=$NODE_RANK/$NNODES  tp=16 ep=16  head=$PREFILL_HEAD:$PREFILL_PORT  ->  docker logs -f $NAME"

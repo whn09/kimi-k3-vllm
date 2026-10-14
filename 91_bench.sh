@@ -45,7 +45,7 @@ fi
 for c in $CONCS; do
     n=$(( c * NPROMPT_MULT )); (( n < 64 )) && n=64
     # Every axis that can differ between arms goes in the name.
-    tag="k3v_pd2p2d_dec-${DECODE_MODE}_seqs${DECODE_TOTAL_SEQS}_isl${ISL}_osl${OSL}_c${c}_n${n}_$(date +%Y%m%d-%H%M%S)"
+    tag="k3v_pd2p2d_kv-${KV_CONNECTOR}_dec-${DECODE_MODE}_seqs${DECODE_TOTAL_SEQS}_isl${ISL}_osl${OSL}_c${c}_n${n}_$(date +%Y%m%d-%H%M%S)"
     echo "== $tag"
     run "$c" "$n" "$tag" 2>&1 | tee "$OUT/$tag.log" | grep -E "Successful|Benchmark duration|Output token throughput|Mean TTFT|Median TTFT|Mean TPOT|Median TPOT|P99 TPOT|Median ITL|P99 ITL"
 done

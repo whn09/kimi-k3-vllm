@@ -83,7 +83,8 @@ RUN set -eu; \
 
 # amazon-contributing/DeepEP main @ 6de427b: the ref the official sm103 EP image
 # on these hosts was built from. 10.3 = sm_103 (B300); 10.0 kept so the same
-# image also runs on b200.
+# image also runs on b200. The stubs dir is on LIBRARY_PATH because the link
+# needs -lcuda and `docker build` has no driver.
 ARG DEEPEP_REF=6de427b1728aaac46f473f91b429397eb24de691
 ARG DEEPEP_ARCH="10.0;10.3"
 ENV K3_DEEPEP_REF=${DEEPEP_REF}
@@ -99,7 +100,7 @@ RUN set -eu; \
     git checkout -q FETCH_HEAD; \
     git submodule update -q --init --recursive --depth 1; \
     NCCL_LIB="$(python3 -c 'import nvidia.nccl, os; print(os.path.join(list(nvidia.nccl.__path__)[0], "lib"))')"; \
-    TORCH_CUDA_ARCH_LIST="$DEEPEP_ARCH" LIBRARY_PATH="$NCCL_LIB:${LIBRARY_PATH:-}" \
+    TORCH_CUDA_ARCH_LIST="$DEEPEP_ARCH" LIBRARY_PATH="$NCCL_LIB:/usr/local/cuda/lib64/stubs:${LIBRARY_PATH:-}" \
       python3 setup.py bdist_wheel; \
     pip install --no-cache-dir --no-deps dist/*.whl; \
     rm -rf build dist; \
@@ -109,6 +110,25 @@ from importlib.metadata import distributions;\
 print(len({d.metadata['Name'] for d in distributions() \
   if any(str(f).startswith('deep_ep/') for f in (d.files or []))}))"); \
     test "$n" -eq 1 || { echo "FATAL: $n distributions own deep_ep/, expected 1"; exit 1; }
+
+# Mooncake: the nightly ships mooncake-transfer-engine-cuda13, which is built
+# WITHOUT EFA -- it passes startup and the PD warmup, then fails the first real
+# transfer. Swap in the EFA build (KV_CONNECTOR=mooncake). The real
+# discriminator is that engine.so links libfabric; `grep -i efa` is vacuous
+# ("d-efa-ult").
+ARG MOONCAKE_PKG=mooncake-transfer-engine-efa-cuda13
+RUN set -eu; \
+    old=$(pip list --format=freeze 2>/dev/null | sed -n 's/^\(mooncake[^=]*\)==.*/\1/p' | tr '\n' ' '); \
+    echo "removing pre-installed mooncake: ${old:-<none>}"; \
+    if [ -n "$old" ]; then pip uninstall -y $old; fi; \
+    SP=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])"); \
+    rm -rf "$SP/mooncake" "$SP"/mooncake*.libs; \
+    pip install --no-cache-dir "$MOONCAKE_PKG"; \
+    n=$(pip list --format=freeze 2>/dev/null | grep -c '^mooncake' || true); \
+    test "$n" -eq 1 || { echo "FATAL: $n mooncake distributions installed"; pip list --format=freeze | grep '^mooncake'; exit 1; }; \
+    E=$(python3 -c "import importlib.util as u, os; print(os.path.join(os.path.dirname(u.find_spec('mooncake').origin), 'engine.so'))"); \
+    ldd "$E" | grep -q libfabric || { echo "FATAL: $E does not link libfabric -- NON-EFA mooncake"; exit 1; }; \
+    echo "mooncake EFA OK: $(pip list --format=freeze | grep '^mooncake')"
 
 ARG VLLM_ROUTER_VER=
 RUN pip install --no-cache-dir "vllm-router${VLLM_ROUTER_VER:+==$VLLM_ROUTER_VER}" && \
@@ -130,6 +150,7 @@ RUN set -eu; \
     python3 -c "from vllm.utils.import_utils import deep_ep_v2_unavailable_reason as r; x = r(); print('vllm deepep_v2:', x or 'available'); assert x is None" \
       || echo "WARN: deepep_v2 availability probe failed under the libcuda stub (it reads the runtime NCCL version); re-checked at launch"; \
     python3 -c "import vllm.models.kimi_k3; print('vllm kimi_k3 OK')"; \
+    python3 -c "from mooncake.engine import TransferEngine; print('mooncake TransferEngine OK')"; \
     NV=$(python3 -c "import importlib.metadata as m; print(m.version('nvidia-nccl-cu13'))"); \
     python3 -c "import sys; v=tuple(int(x) for x in '$NV'.split('.')[:2]); sys.exit(0 if v >= (2,31) else 1)" \
       || { echo "FATAL: a later layer downgraded NCCL to $NV"; exit 1; }; \

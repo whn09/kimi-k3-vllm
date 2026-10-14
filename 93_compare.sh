@@ -17,7 +17,7 @@ P0="${P0:-B300-1}"; P1="${P1:-B300-2}"; D0="${D0:-B300-3}"; D1="${D1:-B300-4}"
 KIT="$SCRIPT_DIR_HOST"
 SSH=(ssh -o ConnectTimeout=10 -o BatchMode=yes -o LogLevel=ERROR -o ServerAliveInterval=30)
 # Forwarded to every remote script so a laptop-side override reaches the hosts.
-FWD="ISL=${ISL:-1024} OSL=${OSL:-1024} CONCS='${CONCS:-16 32 64 128}' DECODE_SEQS_PER_RANK=${DECODE_SEQS_PER_RANK:-8} IMAGE=$IMAGE"
+FWD="KV_CONNECTOR=${KV_CONNECTOR:-nixl} ISL=${ISL:-1024} OSL=${OSL:-1024} CONCS='${CONCS:-16 32 64 128}' DECODE_SEQS_PER_RANK=${DECODE_SEQS_PER_RANK:-8} IMAGE=$IMAGE"
 
 rsh() { local h="$1"; shift; "${SSH[@]}" "$h" "cd $KIT && $FWD $*"; }
 

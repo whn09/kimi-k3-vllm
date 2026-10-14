@@ -161,9 +161,31 @@ build_deepep_envs() {
     return 0
 }
 
+# ---- KV transfer ----
+#   nixl      NixlConnector, LIBFABRIC backend (EFA has no UCX `rc`). The recipe's
+#             connector, and the one whose P TP16 -> D TP1 path the recipe uses.
+#   mooncake  MooncakeConnector over the EFA wheel, protocol=efa. vLLM's Mooncake
+#             Mamba path is only validated on GDN, not K3's KDA.
+KV_CONNECTOR="${KV_CONNECTOR:-nixl}"
 kv_config() {   # kv_config <kv_producer|kv_consumer>
-    printf '{"kv_connector":"NixlConnector","kv_role":"%s","kv_load_failure_policy":"fail","kv_connector_extra_config":{"backends":["%s"]}}' \
-        "$1" "${NIXL_BACKEND:-LIBFABRIC}"
+    case "$KV_CONNECTOR" in
+        nixl)
+            printf '{"kv_connector":"NixlConnector","kv_role":"%s","kv_load_failure_policy":"fail","kv_connector_extra_config":{"backends":["%s"]}}' \
+                "$1" "${NIXL_BACKEND:-LIBFABRIC}" ;;
+        mooncake)
+            printf '{"kv_connector":"MooncakeConnector","kv_role":"%s","kv_load_failure_policy":"fail","kv_connector_extra_config":{"mooncake_protocol":"efa"}}' \
+                "$1" ;;
+        *) echo "ERROR: KV_CONNECTOR must be nixl | mooncake" >&2; return 1 ;;
+    esac
+}
+# Mooncake MR registration serialises on the EFA provider's per-domain lock;
+# unbounded fan-out cost 138 s of K3 startup on sglang, 8 threads 20.7 s.
+# expandable_segments remaps VA under a registered MR => every fi_read EINVAL,
+# so it must stay off under PD.
+build_kv_envs() {
+    KV_ENVS=(-e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False)
+    [[ "$KV_CONNECTOR" == mooncake ]] && KV_ENVS+=(-e MC_MAX_CONCURRENT_REG_MR="${MC_MAX_CONCURRENT_REG_MR:-8}")
+    return 0
 }
 
 # `docker rm -f` returns before the workers release the GPUs; an immediate

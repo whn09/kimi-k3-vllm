@@ -21,6 +21,7 @@ require_image
 build_cache_args
 build_gdr_args
 build_common_envs
+build_kv_envs
 
 MY_IP=$(ip route get 1.1.1.1 | sed -n 's/.* src \([0-9.]*\).*/\1/p')
 
@@ -91,11 +92,11 @@ docker run -d --name "$NAME" \
     --shm-size=600g \
     -v "$HOST_MODEL_DIR/Kimi-K3:$MODEL_PATH:ro" \
     "${CACHE_ARGS[@]}" \
-    "${COMMON_ENVS[@]}" \
+    "${COMMON_ENVS[@]}" "${KV_ENVS[@]}" \
     ${EXTRA_ENVS[@]+"${EXTRA_ENVS[@]}"} \
     -e VLLM_NIXL_SIDE_CHANNEL_HOST="$NIXL_HOST" \
     -e VLLM_NIXL_SIDE_CHANNEL_PORT="$DECODE_NIXL_PORT" \
-    -e K3V_ROLE=decode -e K3V_DECODE_MODE="$DECODE_MODE" -e K3V_NODE_RANK="$NODE_RANK" \
+    -e K3V_ROLE=decode -e K3V_DECODE_MODE="$DECODE_MODE" -e K3V_NODE_RANK="$NODE_RANK" -e K3V_KV_CONNECTOR="$KV_CONNECTOR" \
     -e K3V_DECODE_TOTAL_SEQS="$DECODE_TOTAL_SEQS" \
     "$IMAGE" "${ARGS[@]}"
 
