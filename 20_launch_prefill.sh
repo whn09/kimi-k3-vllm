@@ -42,6 +42,11 @@ ARGS=(
     --reasoning-parser kimi_k3
 )
 (( NODE_RANK > 0 )) && ARGS+=(--headless)
+# Cross-node TP on p6-b300 (not an NVL72): vLLM's custom all-reduce probes MNNVL
+# with a torch symmetric-memory rendezvous over all 16 ranks, which has no
+# multicast here -- part of the group bails out and the rest block in
+# rendezvous() forever, right after "NCCL version", at 2.6 GB and 0% util.
+(( NNODES > 1 )) && ARGS+=(--disable-custom-all-reduce)
 # shellcheck disable=SC2206
 [[ -n "${EXTRA_ARGS:-}" ]] && ARGS+=($EXTRA_ARGS)
 
