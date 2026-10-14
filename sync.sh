@@ -2,6 +2,8 @@
 # LAPTOP-side helper for the 4 B300 hosts.
 #
 #   bash sync.sh pull          # git pull the kit on every host (after a push)
+#   bash sync.sh bundle        # no GitHub remote: ship HEAD as a git bundle and
+#                              # fast-forward each host's clone from it
 #   bash sync.sh pull-image    # docker pull $IMAGE on every host + compare ids
 #   bash sync.sh results       # rsync hosts' results/ -> local results/
 #   bash sync.sh status        # containers + GPU memory on every host
@@ -20,6 +22,13 @@ case "${1:-}" in
     pull)
         for h in $HOSTS; do
             "${SSH[@]}" "$h" "test -d $REMOTE/.git || git clone -q $REPO_URL $REMOTE; cd $REMOTE && git pull -q --ff-only && echo \"$h: \$(git log -1 --format='%h %s')\""
+        done ;;
+    bundle)
+        B=/tmp/kimi-k3-vllm.bundle
+        git bundle create -q "$B" main
+        for h in $HOSTS; do
+            scp -q -o LogLevel=ERROR "$B" "$h:$B"
+            "${SSH[@]}" "$h" "test -d $REMOTE/.git || git clone -q -b main $B $REMOTE; cd $REMOTE && git pull -q --ff-only $B main && echo \"$h: \$(git log -1 --format='%h %s')\""
         done ;;
     pull-image)
         for h in $HOSTS; do
