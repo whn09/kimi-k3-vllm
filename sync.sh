@@ -28,7 +28,16 @@ case "${1:-}" in
         git bundle create -q "$B" main
         for h in $HOSTS; do
             scp -q -o LogLevel=ERROR "$B" "$h:$B"
-            "${SSH[@]}" "$h" "test -d $REMOTE/.git || git clone -q -b main $B $REMOTE; cd $REMOTE && git pull -q --ff-only $B main && echo \"$h: \$(git log -1 --format='%h %s')\""
+            # Bench results are written on the host and later committed from the
+            # laptop, so the incoming commit often carries files the host already
+            # has untracked -- and git refuses to overwrite them. Drop a host copy
+            # ONLY if it is byte-identical to the committed one; any difference
+            # aborts the pull for that host instead.
+            "${SSH[@]}" "$h" "test -d $REMOTE/.git || git clone -q -b main $B $REMOTE; cd $REMOTE && git fetch -q $B main && \
+                for f in \$(git ls-files --others --exclude-standard results/); do \
+                    want=\$(git rev-parse -q --verify FETCH_HEAD:\$f) || continue; \
+                    [ \"\$(git hash-object \$f)\" = \"\$want\" ] && rm -f \$f || { echo \"$h: \$f differs from the commit -- not touching it\"; exit 1; }; \
+                done; git merge -q --ff-only FETCH_HEAD && echo \"$h: \$(git log -1 --format='%h %s')\""
         done ;;
     pull-image)
         for h in $HOSTS; do
