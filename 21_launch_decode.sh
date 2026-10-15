@@ -98,6 +98,20 @@ case "$DECODE_MODE" in
         )
         NIXL_HOST="$MY_IP"
         ;;
+    tp8_1n)
+        # The vLLM recipe's single-node decode: TP8 x DP1 + EP8 on each node,
+        # two independent instances. At DP=1 vLLM runs NO a2a (no DeepEP): the
+        # MoE output is all-reduced over NVLink, where custom all-reduce and
+        # K3's fused GEMM+AR (NVLink multicast) are available. Admission is the
+        # EP16 rows' total, 2 x 512, not the recipe's 8 per instance.
+        ARGS+=(
+            --tensor-parallel-size 8
+            --max-num-seqs $(( DECODE_SEQS_PER_RANK * 8 ))
+            --max-num-batched-tokens "${DECODE_MAX_BATCHED:-$(( DECODE_SEQS_PER_RANK * 8 * 4 ))}"
+            --max-model-len "${DECODE_MAX_MODEL_LEN:-8192}"
+        )
+        NIXL_HOST="$MY_IP"
+        ;;
     tp)
         ARGS+=(
             --tensor-parallel-size 16
@@ -111,7 +125,7 @@ case "$DECODE_MODE" in
         NIXL_HOST="$DECODE_HEAD"
         ;;
     *)
-        echo "ERROR: DECODE_MODE must be deepep_v2 | deepep_v2_1n_tp{2,4} | agrs | tp, got '$DECODE_MODE'" >&2
+        echo "ERROR: DECODE_MODE must be deepep_v2 | deepep_v2_1n_tp{2,4} | tp8_1n | agrs | tp, got '$DECODE_MODE'" >&2
         exit 1 ;;
 esac
 # shellcheck disable=SC2206

@@ -28,7 +28,7 @@ PAT = re.compile(
     r"_isl(?P<isl>\d+)_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)"
     r"(?:_r(?P<rep>\d+))?(?:_img-(?P<img>[a-z0-9]+))?_(?P<ts>[\d-]+)\.json$"
 )
-ORDER = {"deepep_v2": 0, "deepep_v2_1n_tp2": 1, "deepep_v2_1n_tp4": 1, "agrs": 2, "tp": 3}
+ORDER = {"deepep_v2": 0, "deepep_v2_1n_tp2": 1, "deepep_v2_1n_tp4": 1, "tp8_1n": 2, "agrs": 3, "tp": 4}
 
 
 def fmt(xs, nd=0):
@@ -78,7 +78,8 @@ def main(root):
             bt = [c["median_tpot_ms"] for _, c, _ in base]
             rel_s = f"{mean(sat) / mean(bs) - 1:+.1%}" if full and bs else "n/a"
             rel = f"{rel_s} / {mean(tpot) / mean(bt) - 1:+.1%}"
-        label = {"deepep_v2": "deepep_v2 (SM12, EP16 cross-node)"}.get(mode, mode)
+        label = {"deepep_v2": "deepep_v2 (SM12, EP16 cross-node)",
+                 "tp8_1n": "2 x 1-node TP8 (all-reduce, recipe)"}.get(mode, mode)
         if mode.startswith("deepep_v2_1n"):
             label = f"2 x 1-node EP8, {mode.split('/')[0].rsplit('_', 1)[1].upper()} attn ({mode.split('/')[1]})"
         imgs = "+".join(sorted({i for i, _, _ in rs}))

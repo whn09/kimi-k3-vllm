@@ -1,0 +1,70 @@
+### prefill (TP16) on B300-1+B300-2
+  already healthy -- reusing
+### decode arm: deepep_v2_1n_tp2 on B300-3+B300-4
+41ab87c5fb58adeb8f602eebacafe2a3b0e9330d5930870b94e08e264f1baa35
+launched 'k3v-decode'  mode=deepep_v2_1n_tp2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  1-node instance (TP2 x DP4, EP8): gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+373c7de0ee42e9df09d5c0c6e927512e1389a29d0766450778c2e079cd2cb6e3
+launched 'k3v-decode'  mode=deepep_v2_1n_tp2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  1-node instance (TP2 x DP4, EP8): gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+FATAL: k3v-decode on B300-3 is 'exited' while waiting for 172.31.0.212:8002. Last log lines:
+ValueError: To serve at least one request with the model's max seq len (1048576), (27.29 GiB KV cache is needed, which is larger than the available KV cache memory (9.23 GiB). Based on the available memory, the estimated maximum model length is 347392. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+Process EngineCore_DP2:
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1514, in run_engine_core
+    raise e
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1476, in run_engine_core
+    engine_core = DPEngineCoreProc(*args, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2184, in __init__
+    super().__init__(
+  File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1194, in __init__
+    super().__init__(
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 157, in __init__
+    kv_cache_config = self._initialize_kv_caches(vllm_config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 326, in _initialize_kv_caches
+    kv_cache_configs = get_kv_cache_configs(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/core/kv_cache_planning.py", line 1592, in get_kv_cache_configs
+    _check_enough_kv_cache_memory(
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/core/kv_cache_planning.py", line 76, in _check_enough_kv_cache_memory
+    raise ValueError(
+ValueError: To serve at least one request with the model's max seq len (1048576), (27.29 GiB KV cache is needed, which is larger than the available KV cache memory (9.23 GiB). Based on the available memory, the estimated maximum model length is 347392. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+Traceback (most recent call last):
+  File "/usr/local/bin/vllm", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/main.py", line 120, in main
+    args.dispatch_function(args)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/serve.py", line 152, in cmd
+    run_multi_api_server(args)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/serve.py", line 336, in run_multi_api_server
+    with launch_core_engines(
+  File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/utils.py", line 1351, in launch_core_engines
+    wait_for_engine_startup(
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/utils.py", line 1431, in wait_for_engine_startup
+    raise RuntimeError(
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process ApiServer_0
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process ApiServer_1
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process ApiServer_2
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process ApiServer_3
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore_DP0
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore_DP1
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore_DP2
+(MainProcess pid=383) INFO 10-15 12:00:33 [utils.py:628] [shutdown] Process manager: send sigterm to process VLLM_DP_Coordinator
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 8 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

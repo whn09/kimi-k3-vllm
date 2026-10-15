@@ -1,0 +1,51 @@
+### prefill (TP16) on B300-1+B300-2
+  already healthy -- reusing
+### decode arm: deepep_v2_1n_tp4 on B300-3+B300-4
+86f8f04b8aeb4a975df75ee3cc66bcae7f23b706be90a141f228c42338e33581
+launched 'k3v-decode'  mode=deepep_v2_1n_tp4  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  1-node instance (TP4 x DP2, EP8): gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+a49fd0205af7774212dc6e31326f32d26b0a57ca11ff79525390dde6291f8643
+launched 'k3v-decode'  mode=deepep_v2_1n_tp4  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  1-node instance (TP4 x DP2, EP8): gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2_1n_tp4
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+5878b87937be9fc148847d6d4080bdfd56391039d3c048cc59dc72ff03086b1c
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 619861 tokens >= 196608 needed per rank
+== completion (greedy)
+' Paris. The Eiffel Tower is located in Paris. The Louvre Museum is also in Paris. The Seine River flows through Paris. Notre-Dame Cathedral is'
+{'prompt_tokens': 5, 'total_tokens': 37, 'completion_tokens': 32, 'prompt_tokens_details': None, 'completion_tokens_details': None}
+== chat
+content: '391'
+reasoning chars: 44
+{'prompt_tokens': 102, 'total_tokens': 142, 'completion_tokens': 40, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 26}}
+== stream
+stream chunks: 40
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_1n_tp4_sms0_seqs1024_isl1024_osl2048_c256_n512_r1_img-pr61707_20261015-130614  (resolved sms=64)
+Successful requests:                     512       
+Benchmark duration (s):                  193.94    
+Output token throughput (tok/s):         5406.78   
+Mean TTFT (ms):                          1469.00   
+Median TTFT (ms):                        1054.66   
+Mean TPOT (ms):                          46.28     
+Median TPOT (ms):                        46.05     
+P99 TPOT (ms):                           46.76     
+Median ITL (ms):                         46.78     
+P99 ITL (ms):                            50.54     
+sampler: max_running=256/256 sat_window=186s sat_gen_tok_s=5491.819840681952
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_1n_tp4_sms0_seqs1024_isl1024_osl2048_c512_n1024_r1_img-pr61707_20261015-130940  (resolved sms=64)
+Successful requests:                     1024      
+Benchmark duration (s):                  238.32    
+Output token throughput (tok/s):         8799.70   
+Mean TTFT (ms):                          2232.80   
+Median TTFT (ms):                        1178.67   
+Mean TPOT (ms):                          56.43     
+Median TPOT (ms):                        56.40     
+P99 TPOT (ms):                           57.16     
+Median ITL (ms):                         56.90     
+P99 ITL (ms):                            63.51     
+sampler: max_running=512/512 sat_window=221s sat_gen_tok_s=9003.10600267806
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_1n_tp4_sms0_seqs1024_isl1024_osl2048_c1024_n2048_r1_img-pr61707_20261015-131357  (resolved sms=64)

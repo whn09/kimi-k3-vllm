@@ -1,0 +1,64 @@
+### prefill (TP16) on B300-1+B300-2
+  already healthy -- reusing
+### decode arm: deepep_v2_1n_tp2 on B300-3+B300-4
+d649ab42dd6bc8058f560ffea0ed74eb6f3e2def27f4a656af2305cbdf2d205b
+launched 'k3v-decode'  mode=deepep_v2_1n_tp2  node-rank=0/2  total-seqs=960  ->  docker logs -f k3v-decode
+  1-node instance (TP2 x DP4, EP8): gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+32fb04c37c3dc916c553b84203e920c61e9e3d04d0af86acdf4977525667ae44
+launched 'k3v-decode'  mode=deepep_v2_1n_tp2  node-rank=1/2  total-seqs=960  ->  docker logs -f k3v-decode
+  1-node instance (TP2 x DP4, EP8): gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2_1n_tp2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+3b3c7e0667f508417740b73834d2bde44c36bb784cc5638f15cc885b067d5532
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  WARN: smallest decode KV pool is 166570 tokens < 184320 needed for 60 x 3072 -- decode cannot fill
+== completion (greedy)
+' Paris. The city is known for its art, fashion, and culture. Many tourists visit Paris every year to see the Eiffel Tower and the Louvre Museum'
+{'prompt_tokens': 5, 'total_tokens': 37, 'completion_tokens': 32, 'prompt_tokens_details': None, 'completion_tokens_details': None}
+== chat
+content: '391'
+reasoning chars: 44
+{'prompt_tokens': 102, 'total_tokens': 142, 'completion_tokens': 40, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 26}}
+== stream
+stream chunks: 40
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_1n_tp2_sms0_seqs960_isl1024_osl2048_c256_n512_r1_img-pr61707_20261015-123251  (resolved sms=64)
+Successful requests:                     512       
+Benchmark duration (s):                  324.23    
+Output token throughput (tok/s):         3234.08   
+Mean TTFT (ms):                          17853.23  
+Median TTFT (ms):                        11275.75  
+Mean TPOT (ms):                          55.84     
+Median TPOT (ms):                        52.55     
+P99 TPOT (ms):                           71.66     
+Median ITL (ms):                         47.69     
+P99 ITL (ms):                            285.51    
+sampler: max_running=240/256 sat_window=208s sat_gen_tok_s=4043.9399602350313
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_1n_tp2_sms0_seqs960_isl1024_osl2048_c512_n1024_r1_img-pr61707_20261015-123831  (resolved sms=64)
+Successful requests:                     1024      
+Benchmark duration (s):                  536.47    
+Output token throughput (tok/s):         3909.17   
+Mean TTFT (ms):                          102542.92 
+Median TTFT (ms):                        117540.72 
+Mean TPOT (ms):                          51.73     
+Median TPOT (ms):                        51.20     
+P99 TPOT (ms):                           60.25     
+Median ITL (ms):                         47.52     
+P99 ITL (ms):                            285.93    
+sampler: max_running=240/512 sat_window=0s sat_gen_tok_s=None
+pulled <- B300-1
+| kv | ISL/OSL | conc | decode arm | image(s) | runs | decode-full tok/s | max running / target | TPOT p50 (ms) | ITL p50 (ms) | TTFT p50 (ms) | ok | vs deepep_v2 (tok/s / TPOT) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nixl | 1024/2048 | 256 | deepep_v2 (SM12, EP16 cross-node) | sms1 | 2 | 4048 [4040-4056] | 256 / 256 | 62.87 [62.83-62.92] | 63.03 [62.98-63.08] | 2416 [1213-3619] | 512/512 | — |
+| nixl | 1024/2048 | 256 | 2 x 1-node EP8, TP2 attn (smauto) | pr61707 | 1 | 4044 | 240 / 256 | 52.55 | 47.69 | 11276 | 512 | -0.1% / -16.4% |
+| nixl | 1024/2048 | 256 | agrs | pr61707 | 1 | 3457 | 256 / 256 | 73.46 | 73.69 | 3488 | 512 | -14.6% / +16.8% |
+| nixl | 1024/2048 | 256 | tp | pr61707 | 1 | 3507 | 256 / 256 | 72.63 | 73.01 | 1239 | 512 | -13.4% / +15.5% |
+| nixl | 1024/2048 | 512 | deepep_v2 (SM12, EP16 cross-node) | sms1 | 2 | 6571 [6518-6624] | 512 / 512 | 76.74 [76.56-76.91] | 77.02 [76.93-77.12] | 2895 [1326-4465] | 1024/1024 | — |
+| nixl | 1024/2048 | 512 | 2 x 1-node EP8, TP2 attn (smauto) | pr61707 | 1 | NOT FULL | 240 / 512 | 51.20 | 47.52 | 117541 | 1024 | n/a / -33.3% |
+| nixl | 1024/2048 | 512 | agrs | pr61707 | 1 | 6213 | 512 / 512 | 80.14 | 80.63 | 4714 | 1024 | -5.5% / +4.4% |
+| nixl | 1024/2048 | 512 | tp | pr61707 | 1 | 5283 | 512 / 512 | 96.53 | 96.96 | 1593 | 1024 | -19.6% / +25.8% |
+| nixl | 1024/2048 | 1024 | deepep_v2 (SM12, EP16 cross-node) | pr61707+sms1 | 3 | 11371 [11102-11507] | 1024 / 1024 | 87.39 [86.44-88.48] | 88.07 [87.43-88.59] | 13056 [1473-28696] | 1024/2048/2048 | — |
+| nixl | 1024/2048 | 1024 | agrs | pr61707 | 1 | 10985 | 1024 / 1024 | 88.68 | 88.97 | 9072 | 2048 | -3.4% / +1.5% |
+| nixl | 1024/2048 | 1024 | tp | pr61707 | 1 | 7365 | 1024 / 1024 | 138.26 | 138.81 | 1867 | 2048 | -35.2% / +58.2% |
