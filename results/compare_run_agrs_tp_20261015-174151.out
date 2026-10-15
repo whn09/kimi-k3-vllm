@@ -1,0 +1,87 @@
+### prefill (TP16) on B300-1+B300-2
+d650191fa855d707c91ee522ec45a76d09c28ad7615df98c689e77c01126a036
+launched 'k3v-prefill'  node-rank=0/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+9015cca871ea427b443fcd65612cc2a71cf2b5a0bbeaff9ca5dd3f4d7c98ed4b
+launched 'k3v-prefill'  node-rank=1/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+  (headless: never binds :8001)
+  healthy: 172.31.10.219:8001
+### decode arm: agrs on B300-3+B300-4
+87aac54583f24c968607cce2d25f3c55fcbefc5be9e14e1d40e6401df251a70c
+launched 'k3v-decode'  mode=agrs  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+fd5e9cc0cc4e8d08ef172cee954c522e250ff75ee3536770bce70b7dc58a61ff
+launched 'k3v-decode'  mode=agrs  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=agrs
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+7a69c98b143bd0d64d276d7ca99223f5cb6493a2feedfe3d94f48c1111a47a62
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 2102789 tokens >= 196608 needed per rank
+== completion (greedy)
+' Paris. The city is known for its art, fashion, and culture. Many tourists visit Paris every year to see the Eiffel Tower and the Louvre Museum'
+{'prompt_tokens': 5, 'total_tokens': 37, 'completion_tokens': 32, 'prompt_tokens_details': None, 'completion_tokens_details': None}
+== chat
+content: '391'
+reasoning chars: 44
+{'prompt_tokens': 102, 'total_tokens': 142, 'completion_tokens': 40, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 26}}
+== stream
+stream chunks: 40
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-agrs_sms12_seqs1024_isl1024_osl2048_c256_n512_r1_img-pr61707_20261015-095925  (resolved sms=unknown)
+Successful requests:                     512       
+Benchmark duration (s):                  319.88    
+Output token throughput (tok/s):         3278.08   
+Mean TTFT (ms):                          7082.29   
+Median TTFT (ms):                        3487.80   
+Mean TPOT (ms):                          73.59     
+Median TPOT (ms):                        73.46     
+P99 TPOT (ms):                           73.84     
+Median ITL (ms):                         73.69     
+P99 ITL (ms):                            78.00     
+sampler: max_running=256/256 sat_window=287s sat_gen_tok_s=3456.6936522511423
+== k3v_pd2p2d_kv-nixl_dec-agrs_sms12_seqs1024_isl1024_osl2048_c512_n1024_r1_img-pr61707_20261015-100459  (resolved sms=unknown)
+Successful requests:                     1024      
+Benchmark duration (s):                  349.03    
+Output token throughput (tok/s):         6008.45   
+Mean TTFT (ms):                          5653.65   
+Median TTFT (ms):                        4714.06   
+Mean TPOT (ms):                          80.23     
+Median TPOT (ms):                        80.14     
+P99 TPOT (ms):                           80.57     
+Median ITL (ms):                         80.63     
+P99 ITL (ms):                            88.30     
+sampler: max_running=512/512 sat_window=323s sat_gen_tok_s=6212.996682772234
+== k3v_pd2p2d_kv-nixl_dec-agrs_sms12_seqs1024_isl1024_osl2048_c1024_n2048_r1_img-pr61707_20261015-101104  (resolved sms=unknown)
+Successful requests:                     2048      
+Benchmark duration (s):                  403.55    
+Output token throughput (tok/s):         10393.47  
+Mean TTFT (ms):                          11160.15  
+Median TTFT (ms):                        9072.41   
+Mean TPOT (ms):                          88.58     
+Median TPOT (ms):                        88.68     
+P99 TPOT (ms):                           89.22     
+Median ITL (ms):                         88.97     
+P99 ITL (ms):                            105.52    
+sampler: max_running=1024/1024 sat_window=350s sat_gen_tok_s=10984.543347256504
+pulled <- B300-1
+### decode arm: tp on B300-3+B300-4
+2347d9e7843ebf2deb541241c328bd59d0aaa15541e4cca65f851912b00b9c28
+launched 'k3v-decode'  mode=tp  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+b6515990920246538fe1ad31bbbd53a5ad65096f6eba3489e4ccab19c031bc32
+launched 'k3v-decode'  mode=tp  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  healthy: 172.31.0.212:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=tp
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002
+9b98c330c1e80954974b2708c4032b74ac626c9da6a45aaaacc9432d531e8a2e
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 5451904 tokens >= 196608 needed per rank
+== completion (greedy)
+' Paris. The Eiffel Tower is located in Paris. It is a famous landmark. Many tourists visit it every year. The tower was built in 1889'
+{'prompt_tokens': 5, 'total_tokens': 37, 'completion_tokens': 32, 'prompt_tokens_details': None, 'completion_tokens_details': None}
+== chat
+content: '391'
+reasoning chars: 44
+{'prompt_tokens': 102, 'total_tokens': 142, 'completion_tokens': 40, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 26}}
+== stream
+stream chunks: 40
+== warmup (not saved as a result)

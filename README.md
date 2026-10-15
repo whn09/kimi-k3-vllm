@@ -49,6 +49,10 @@ bash sync.sh pull-image        # on the laptop: pull on all 4, prints image ids
   decode tok/s at full load, beyond the replicate noise.
   `results/sm_sweep_run_20261014-200134.out` is the first, failed attempt
   (`--random-range-ratio 1.0`, no request was sent) -- kept for the record.
+- **Decode arms (2026-10-15):** [`results/compare.md`](results/compare.md) -- deepep_v2 (SM12)
+  vs `allgather_reducescatter` (DP16) vs pure TP16 (all-reduce MoE), same prefill and load.
+  deepep_v2 wins everywhere; agrs closes in with load (-14.6% -> -3.4% tok/s from c256 to
+  c1024), TP16 falls away (-13.4% -> -35.2%).
 - Upstream: vllm-project/vllm#61707 (draft) adds the SM knob properly;
   [`pr/vllm_deepep_v2_num_sms.md`](pr/vllm_deepep_v2_num_sms.md) is its description.
 
