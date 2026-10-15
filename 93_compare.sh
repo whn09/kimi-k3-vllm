@@ -21,7 +21,7 @@ for arm in $ARMS; do
     echo "### decode arm: $arm on $D0+$D1"
     launch_decode "$arm" "DEEPEP_NUM_SMS=${DEEPEP_NUM_SMS:-12}"
     kv_capacity_check
-    rs=unknown; [[ "$arm" == deepep_v2 ]] && rs=$(resolved_sms)
+    rs=unknown; [[ "$arm" == deepep_v2* ]] && rs=$(resolved_sms)
     rsh "$P0" "bash 90_smoke_test.sh" || { echo "FATAL: smoke test failed on arm $arm"; exit 1; }
     rsh "$P0" "DECODE_MODE=$arm DEEPEP_NUM_SMS=${DEEPEP_NUM_SMS:-12} RESOLVED_SMS=$rs bash 91_bench.sh"
     HOSTS="$P0" bash sync.sh results

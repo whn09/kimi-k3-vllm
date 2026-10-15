@@ -66,6 +66,25 @@ case "$DECODE_MODE" in
         # Each node's API server owns its own DP ranks' NIXL listeners.
         NIXL_HOST="$MY_IP"
         ;;
+    deepep_v2_1n)
+        # One self-contained instance per decode node: DP8 over this node's 8
+        # GPUs, its own API server (internal DP load balancing), no peer node.
+        # The router lists both nodes, so the two instances split the load and
+        # the TOTAL admission cap stays DECODE_SEQS_PER_RANK x 16.
+        build_deepep_1n_envs
+        EXTRA_ENVS+=("${DEEPEP_ENVS[@]}")
+        ARGS+=(
+            --tensor-parallel-size 1
+            --data-parallel-size 8
+            --data-parallel-size-local 8
+            --data-parallel-address "$MY_IP"
+            --data-parallel-rpc-port "$DECODE_DP_RPC_PORT"
+            --all2all-backend deepep_v2
+            --max-num-seqs "$DECODE_SEQS_PER_RANK"
+            --max-num-batched-tokens "${DECODE_MAX_BATCHED:-$(( DECODE_SEQS_PER_RANK * 4 ))}"
+        )
+        NIXL_HOST="$MY_IP"
+        ;;
     tp)
         ARGS+=(
             --tensor-parallel-size 16
@@ -79,7 +98,7 @@ case "$DECODE_MODE" in
         NIXL_HOST="$DECODE_HEAD"
         ;;
     *)
-        echo "ERROR: DECODE_MODE must be deepep_v2 | agrs | tp, got '$DECODE_MODE'" >&2
+        echo "ERROR: DECODE_MODE must be deepep_v2 | deepep_v2_1n | agrs | tp, got '$DECODE_MODE'" >&2
         exit 1 ;;
 esac
 # shellcheck disable=SC2206
@@ -102,5 +121,6 @@ docker run -d --name "$NAME" \
     "$IMAGE" "${ARGS[@]}"
 
 echo "launched '$NAME'  mode=$DECODE_MODE  node-rank=$NODE_RANK/$NNODES  total-seqs=$DECODE_TOTAL_SEQS  ->  docker logs -f $NAME"
+[[ "$DECODE_MODE" == deepep_v2_1n ]] && echo "  1-node instance: gin=3 hca=${IB_HCA:-$(pick_ib_hca)} direct, deepep-sms=$DEEPEP_NUM_SMS(0=auto)"
 [[ "$DECODE_MODE" == deepep_v2 ]] && echo "  gin=$GIN_TYPE hca=${EFA_HCA:-<none>} deepep-sms=$DEEPEP_NUM_SMS"
 exit 0

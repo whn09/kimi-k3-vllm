@@ -169,6 +169,30 @@ build_common_envs() {
 MULTINODE_TP_ARGS=(--disable-custom-all-reduce)
 MULTINODE_TP_ENVS=(-e VLLM_KIMI_K3_GEMM_AR=0)
 
+# deepep_v2_1n: two INDEPENDENT single-node decode instances, EP8 each, so the
+# a2a never leaves NVLink. GIN type 5 (EFA-GDA) cannot initialise without a
+# second node, so these use type 3 (GDAKI) on ONE ConnectX-7 plane -- the two
+# `ibp*` planes on b300 have no path between them, so NCCL must not straddle
+# them -- and DeepEP's direct (intra-node) kernels. Same recipe the sglang kit
+# validated for single-node `direct`.
+pick_ib_hca() {
+    local d st
+    for d in /sys/class/infiniband/ibp* /sys/class/infiniband/mlx*; do
+        [[ -e "$d" ]] || continue
+        st="$(cat "$d"/ports/1/state 2>/dev/null || true)"
+        [[ "$st" == *ACTIVE* ]] && { basename "$d"; return; }
+    done
+    echo ibp198s0f0
+}
+build_deepep_1n_envs() {
+    DEEPEP_ENVS=(
+        -e NCCL_GIN_TYPE=3
+        -e NCCL_IB_HCA="${IB_HCA:-$(pick_ib_hca)}"
+        -e VLLM_DEEPEP_V2_ALLOW_HYBRID_MODE=0
+        -e VLLM_DEEPEP_V2_NUM_SMS="$DEEPEP_NUM_SMS"
+    )
+}
+
 # Extra -e flags for DeepEP v2 (decode deepep_v2 arm only).
 build_deepep_envs() {
     DEEPEP_ENVS=(

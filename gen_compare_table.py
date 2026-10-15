@@ -28,7 +28,7 @@ PAT = re.compile(
     r"_isl(?P<isl>\d+)_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)"
     r"(?:_r(?P<rep>\d+))?(?:_img-(?P<img>[a-z0-9]+))?_(?P<ts>[\d-]+)\.json$"
 )
-ORDER = {"deepep_v2": 0, "agrs": 1, "tp": 2}
+ORDER = {"deepep_v2": 0, "deepep_v2_1n": 1, "agrs": 2, "tp": 3}
 
 
 def fmt(xs, nd=0):
@@ -55,6 +55,8 @@ def main(root):
         # to the SM sweep table.
         if mode == "deepep_v2" and sms != 12:
             continue
+        if mode == "deepep_v2_1n":
+            mode = f"deepep_v2_1n/sm{'auto' if sms == 0 else sms}"
         dpath = p.with_name(p.name[:-5] + ".decode.json")
         dec = json.loads(dpath.read_text()) if dpath.exists() else {}
         key = (m["kv"], int(m["isl"]), int(m["osl"]), int(m["conc"]), mode)
@@ -63,7 +65,7 @@ def main(root):
     print("| kv | ISL/OSL | conc | decode arm | image(s) | runs | decode-full tok/s | "
           "max running / target | TPOT p50 (ms) | ITL p50 (ms) | TTFT p50 (ms) | ok | vs deepep_v2 (tok/s / TPOT) |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-    for key in sorted(rows, key=lambda k: (k[0], k[1], k[2], k[3], ORDER.get(k[4], 9))):
+    for key in sorted(rows, key=lambda k: (k[0], k[1], k[2], k[3], ORDER.get(k[4].split("/")[0], 9))):
         kv, isl, osl, conc, mode = key
         rs = rows[key]
         sat = [d.get("sat_gen_tok_s") for _, _, d in rs]
@@ -76,7 +78,9 @@ def main(root):
             bt = [c["median_tpot_ms"] for _, c, _ in base]
             rel_s = f"{mean(sat) / mean(bs) - 1:+.1%}" if full and bs else "n/a"
             rel = f"{rel_s} / {mean(tpot) / mean(bt) - 1:+.1%}"
-        label = "deepep_v2 (SM12)" if mode == "deepep_v2" else mode
+        label = {"deepep_v2": "deepep_v2 (SM12, EP16 cross-node)"}.get(mode, mode)
+        if mode.startswith("deepep_v2_1n"):
+            label = f"2 x deepep_v2 1-node EP8 ({mode.split('/')[1]})"
         imgs = "+".join(sorted({i for i, _, _ in rs}))
         mx = max(d.get("max_running", 0) or 0 for _, _, d in rs)
         ok = "/".join(f"{c['completed']}" for _, c, _ in rs)
