@@ -1,0 +1,86 @@
+diff --git a/vllm/distributed/device_communicators/all2all.py b/vllm/distributed/device_communicators/all2all.py
+index 3466700c33..7ea310eb54 100644
+--- a/vllm/distributed/device_communicators/all2all.py
++++ b/vllm/distributed/device_communicators/all2all.py
+@@ -1178,10 +1178,16 @@ class DeepEPV2All2AllManager(All2AllManagerBase):
+             buffer_kwargs, deep_ep.ElasticBuffer
+         )
+         if self._num_sms is None:
+-            self._num_sms = handle.get_theoretical_num_sms(
+-                num_experts=num_experts,
+-                num_topk=kwargs["num_topk"],
+-            )
++            num_sms = envs.VLLM_DEEPEP_V2_NUM_SMS
++            if num_sms < 0:
++                raise ValueError(f"VLLM_DEEPEP_V2_NUM_SMS must be >= 0, got {num_sms}")
++            if num_sms == 0:
++                num_sms = handle.get_theoretical_num_sms(
++                    num_experts=num_experts,
++                    num_topk=kwargs["num_topk"],
++                )
++            self._num_sms = num_sms
++            logger.info_once("DeepEP v2 dispatch/combine uses %d SMs", num_sms)
+         return handle
+ 
+     def max_sms_used(self) -> int | None:
+diff --git a/vllm/envs.py b/vllm/envs.py
+index 4325b48823..f72c092a4a 100755
+--- a/vllm/envs.py
++++ b/vllm/envs.py
+@@ -295,6 +295,7 @@ if TYPE_CHECKING:
+     VLLM_DEEPEP_V2_ALLOW_HYBRID_MODE: bool = True
+     VLLM_DEEPEP_V2_PREFER_OVERLAP: bool = False
+     VLLM_DEEPEP_V2_ALLOW_MULTIPLE_REDUCTION: bool = False
++    VLLM_DEEPEP_V2_NUM_SMS: int = 0
+     VLLM_DBO_COMM_SMS: int = 20
+     VLLM_PATTERN_MATCH_DEBUG: str | None = None
+     VLLM_DEBUG_DUMP_PATH: str | None = None
+@@ -2077,6 +2078,10 @@ environment_variables: dict[str, Callable[[], Any]] = {
+     "VLLM_DEEPEP_V2_ALLOW_MULTIPLE_REDUCTION": lambda: bool(
+         int(os.getenv("VLLM_DEEPEP_V2_ALLOW_MULTIPLE_REDUCTION", "0"))
+     ),
++    # DeepEP v2: number of SMs used by the dispatch/combine kernels. 0 (the
++    # default) uses ElasticBuffer.get_theoretical_num_sms(), which never goes
++    # below 64 SMs unless VLLM_DEEPEP_V2_PREFER_OVERLAP is set.
++    "VLLM_DEEPEP_V2_NUM_SMS": lambda: int(os.getenv("VLLM_DEEPEP_V2_NUM_SMS", "0")),
+     # The number of SMs/CUs to allocate for communication kernels when
+     # running DBO; the rest will be allocated to compute.
+     # Default: 20 on CUDA (SMs), 64 on ROCm (CUs).
+diff --git a/vllm/model_executor/layers/fused_moe/all2all_utils.py b/vllm/model_executor/layers/fused_moe/all2all_utils.py
+index 6a0a2b2358..1e037f8104 100644
+--- a/vllm/model_executor/layers/fused_moe/all2all_utils.py
++++ b/vllm/model_executor/layers/fused_moe/all2all_utils.py
+@@ -302,6 +302,7 @@ def maybe_make_prepare_finalize(
+             use_fp8_dispatch=use_fp8_dispatch,
+             use_cudagraph=use_cudagraph,
+             sp_size=moe.moe_parallel_config.sp_size,
++            num_sms=all2all_manager.max_sms_used() or 0,
+         )
+ 
+     elif moe.use_moonep_kernels:
+diff --git a/vllm/model_executor/layers/fused_moe/prepare_finalize/deepep_v2.py b/vllm/model_executor/layers/fused_moe/prepare_finalize/deepep_v2.py
+index 59614a4c74..943c69ce37 100644
+--- a/vllm/model_executor/layers/fused_moe/prepare_finalize/deepep_v2.py
++++ b/vllm/model_executor/layers/fused_moe/prepare_finalize/deepep_v2.py
+@@ -115,9 +115,13 @@ class DeepEPV2PrepareAndFinalize(mk.FusedMoEPrepareAndFinalizeModular):
+         use_fp8_dispatch: bool = False,
+         use_cudagraph: bool = False,
+         sp_size: int = 1,
++        num_sms: int = 0,
+     ):
+         super().__init__()
+         self.buffer = buffer
++        # SM count for dispatch; combine reuses it from the handle. 0 lets
++        # DeepEP pick its theoretical count.
++        self.num_sms = num_sms
+         self.num_dispatchers_ = num_dispatchers
+         self.dp_size = dp_size
+         self.rank_expert_offset = rank_expert_offset
+@@ -226,6 +230,7 @@ class DeepEPV2PrepareAndFinalize(mk.FusedMoEPrepareAndFinalizeModular):
+             do_expand=do_expand,
+             do_cpu_sync=do_cpu_sync,
+             async_with_compute_stream=False,
++            num_sms=self.num_sms,
+         )
+ 
+         a2a_idx = dbo_current_ubatch_id()

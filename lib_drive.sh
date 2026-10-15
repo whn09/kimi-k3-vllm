@@ -76,8 +76,12 @@ launch_decode() {
 # All 16 ranks must agree; anything else is reported, not averaged away.
 resolved_sms() {
     local v
+    # Two log formats: the legacy patch ("DeepEP v2 num_sms=N", per rank) and
+    # PR #61707 ("DeepEP v2 dispatch/combine uses N SMs", info_once per process).
+    # grep -o, never per line: concurrent ranks glue records onto one line.
     v=$( { "${SSH[@]}" "$D0" "docker logs k3v-decode 2>&1"; "${SSH[@]}" "$D1" "docker logs k3v-decode 2>&1"; } \
-        | sed -n 's/.*DeepEP v2 num_sms=\([0-9]*\).*/\1/p' | sort | uniq -c)
+        | grep -o -E 'DeepEP v2 num_sms=[0-9]+|DeepEP v2 dispatch/combine uses [0-9]+ SMs' \
+        | grep -o -E '[0-9]+' | sort | uniq -c)
     if [[ $(wc -l <<<"$v") -eq 1 && -n "$v" ]]; then awk '{print $2}' <<<"$v"
     else echo "mixed[$(tr -s ' \n' ' ' <<<"$v")]"; fi
 }

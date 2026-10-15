@@ -18,7 +18,7 @@ SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-moonshotai/Kimi-K3}"
 K3V_REGION="${K3V_REGION:-ap-south-2}"
 ECR_REGISTRY="${ECR_REGISTRY:-579019700964.dkr.ecr.${K3V_REGION}.amazonaws.com}"
 ECR_REPO="${ECR_REPO:-kimi-k3-vllm-b300}"
-IMAGE_TAG="${IMAGE_TAG:-vllm77154ca-deepep6de427b-nccl2312-efa1.50.0-sms1}"
+IMAGE_TAG="${IMAGE_TAG:-vllm77154ca-deepep6de427b-nccl2312-efa1.50.0-pr61707}"
 IMAGE="${IMAGE:-${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}}"
 
 # ---- JIT / autotune caches persisted on the host ----
