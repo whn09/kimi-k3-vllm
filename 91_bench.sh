@@ -29,6 +29,9 @@ REP="${REP:-1}"                        # replicate index, stamped into the name
 RESOLVED_SMS="${RESOLVED_SMS:-unknown}"
 WARMUP="${WARMUP:-1}"
 URL_HOST="${URL_HOST:-$PREFILL_HEAD}"
+# Image generation from the image actually benched: "...:vllm77154ca-...-pr61707"
+# -> "pr61707" (last dash field), so runs of two images never share a table row.
+IMG="${IMAGE##*-}"
 OUT="$SCRIPT_DIR_HOST/results"
 mkdir -p "$OUT"
 if [[ "$DECODE_MODE" == tp ]]; then DECODE_URLS="http://${DECODE_HEAD}:${DECODE_PORT}"
@@ -58,7 +61,7 @@ fi
 for c in $CONCS; do
     n=$(( c * NPROMPT_MULT )); (( n < 64 )) && n=64
     # Every axis that can differ between arms goes in the name.
-    tag="k3v_pd2p2d_kv-${KV_CONNECTOR}_dec-${DECODE_MODE}_sms${DEEPEP_NUM_SMS}_seqs${DECODE_TOTAL_SEQS}_isl${ISL}_osl${OSL}_c${c}_n${n}_r${REP}_$(date +%Y%m%d-%H%M%S)"
+    tag="k3v_pd2p2d_kv-${KV_CONNECTOR}_dec-${DECODE_MODE}_sms${DEEPEP_NUM_SMS}_seqs${DECODE_TOTAL_SEQS}_isl${ISL}_osl${OSL}_c${c}_n${n}_r${REP}_img-${IMG}_$(date +%Y%m%d-%H%M%S)"
     echo "== $tag  (resolved sms=$RESOLVED_SMS)"
     python3 decode_sampler.py --out "$OUT/$tag.decode.json" --target "$c" $DECODE_URLS &
     spid=$!

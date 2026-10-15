@@ -21,7 +21,7 @@ from statistics import mean
 
 PAT = re.compile(
     r"k3v_pd2p2d_kv-(?P<kv>[a-z]+)_dec-deepep_v2_sms(?P<sms>\d+)_seqs(?P<seqs>\d+)"
-    r"_isl(?P<isl>\d+)_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)_r(?P<rep>\d+)_(?P<ts>[\d-]+)\.json$"
+    r"_isl(?P<isl>\d+)_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)_r(?P<rep>\d+)(?:_img-(?P<img>[a-z0-9]+))?_(?P<ts>[\d-]+)\.json$"
 )
 
 
@@ -52,12 +52,13 @@ def main(root):
             continue
         dpath = p.with_name(p.name[:-5] + ".decode.json")
         dec = json.loads(dpath.read_text()) if dpath.exists() else {}
-        key = (m["kv"], int(m["seqs"]), int(m["isl"]), int(m["osl"]), int(m["conc"]), int(m["sms"]))
+        # Pre-stamp files are the legacy-patch image (sms1).
+        key = (f"{m['img'] or 'sms1'}/{m['kv']}", int(m["seqs"]), int(m["isl"]), int(m["osl"]), int(m["conc"]), int(m["sms"]))
         rep = int(m["rep"])
         if rep not in runs[key] or m["ts"] > runs[key][rep][0]:
             runs[key][rep] = (m["ts"], json.loads(p.read_text()), dec)
 
-    print("| kv | ISL/OSL | conc | SM (req -> used) | reps | decode-full tok/s | "
+    print("| image/kv | ISL/OSL | conc | SM (req -> used) | reps | decode-full tok/s | "
           "max running / target | TPOT p50 (ms) | ITL p50 (ms) | TPOT p99 (ms) | client out tok/s | dur (s) |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     groups = defaultdict(dict)  # (kv, seqs, isl, osl, conc) -> sms -> metrics
@@ -80,7 +81,7 @@ def main(root):
 
     print("\n**SM12 vs auto** (positive tok/s and negative TPOT favour SM12; "
           "noise = larger of the two arms' own max-min spread)\n")
-    print("| kv | ISL/OSL | conc | Δ decode-full tok/s | Δ TPOT p50 | noise (tok/s / TPOT) | verdict |")
+    print("| image/kv | ISL/OSL | conc | Δ decode-full tok/s | Δ TPOT p50 | noise (tok/s / TPOT) | verdict |")
     print("|---|---|---|---|---|---|---|")
     for g, arms in sorted(groups.items(), key=lambda kv_: (kv_[0][0], kv_[0][2], kv_[0][3], kv_[0][4])):
         if 12 not in arms or 0 not in arms:
