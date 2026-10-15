@@ -46,27 +46,40 @@ def collect(root, pat, keyfn):
             continue
         d = p.with_name(p.name[:-5] + ".decode.json")
         dec = json.loads(d.read_text()) if d.exists() else {}
-        if dec.get("sat_gen_tok_s") is None:
-            continue  # never full: not a decode-throughput number
-        out[keyfn(m)].append((dec["sat_gen_tok_s"], json.loads(p.read_text())["median_tpot_ms"]))
+        out[keyfn(m)].append({
+            "tok": dec.get("sat_gen_tok_s"),          # None = decode never full
+            "tpot": json.loads(p.read_text())["median_tpot_ms"],
+            "kv": dec.get("max_kv_usage") or 0.0,
+            "run": dec.get("max_running") or 0,
+        })
     return out
 
 
-def cell(rs, gpus=16, per_gpu=False):
+def full(rs):
+    """Only runs whose decode actually filled are throughput numbers."""
+    return [r for r in (rs or []) if r["tok"] is not None]
+
+
+def cell(rs, gpus=16, per_gpu=False, mark_kv=False):
     if not rs:
         return "—"
-    tok = mean(t for t, _ in rs)
-    tpot = mean(x for _, x in rs)
-    n = f" ×{len(rs)}" if len(rs) > 1 else ""
+    f = full(rs)
+    if not f:
+        return f"not full (max {max(r['run'] for r in rs):.0f} running, KV {max(r['kv'] for r in rs):.2f})"
+    tok = mean(r["tok"] for r in f)
+    tpot = mean(r["tpot"] for r in f)
+    n = f" ×{len(f)}" if len(f) > 1 else ""
+    kv = " †KV" if mark_kv and max(r["kv"] for r in f) >= 0.99 else ""
     if per_gpu:
-        return f"{tok:.0f} ({tok / gpus:.0f}/GPU) / {tpot:.1f} ms{n}"
-    return f"{tok:.0f} / {tpot:.1f} ms{n}"
+        return f"{tok:.0f} ({tok / gpus:.0f}/GPU) / {tpot:.1f} ms{n}{kv}"
+    return f"{tok:.0f} / {tpot:.1f} ms{n}{kv}"
 
 
 def rel(a, b):
+    a, b = full(a), full(b)
     if not a or not b:
         return "—"
-    return f"{mean(t for t, _ in a) / mean(t for t, _ in b) - 1:+.1%}"
+    return f"{mean(r['tok'] for r in a) / mean(r['tok'] for r in b) - 1:+.1%}"
 
 
 def main():
@@ -91,6 +104,27 @@ def main():
         L.append(f"| {c} ({c // 16}) | **{cell(d12)}** | {cell(d0)} ({rel(d0, d12)}) | "
                  f"{cell(ag)} ({rel(ag, d12)}) | {cell(tp)} ({rel(tp, d12)}) |")
     L += ["", "Percentages are tok/s relative to DeepEP v2 SM12 at the same concurrency.", ""]
+
+    L += ["### vLLM: two independent single-node decode instances vs one cross-node EP16 instance", "",
+          "Same prefill, same 16 decode GPUs, same TOTAL concurrency and admission cap; the router",
+          "splits requests round-robin over the two instances, so per-GPU load is identical.",
+          "Single-node DeepEP v2 runs EP8 over NVLink only (GIN type 3, direct kernels); the",
+          "recipe-style TP8 arm uses no a2a at all (vLLM's DP=1 path: MoE all-reduced over NVLink).",
+          "TP1 x DP8 does not fit: K3's ~93 GB of non-expert weights are replicated per GPU at TP1",
+          "and EP8 holds 1/8 of the experts (~192 GB) -> OOM in weight load. DeepEP v2 SMs = auto (64).", "",
+          "| conc (per GPU) | cross-node EP16 DP16, SM12 | 2 x 1-node EP8, TP2 x DP4 | 2 x 1-node EP8, TP4 x DP2 | 2 x 1-node TP8 (recipe, all-reduce) |",
+          "|---|---|---|---|---|"]
+    for c in (256, 512, 1024):
+        base = v.get(("deepep_v2", 12, c))
+        cols = [v.get(("deepep_v2_1n_tp2", 0, c)), v.get(("deepep_v2_1n_tp4", 0, c)), v.get(("tp8_1n", 12, c))]
+        L.append(f"| {c} ({c // 16}) | {cell(base)} | " + " | ".join(
+            (f"{cell(r, mark_kv=True)} ({rel(r, base)})" if full(r) else cell(r)) for r in cols) + " |")
+    L += ["",
+          "`†KV` = the KV pool hit 100% during the run (requests waited for blocks), so the number",
+          "is a capacity ceiling, not the arm's decode speed at that load. `not full` = decode never",
+          "reached 90% of the target concurrency (KV/state-bound), so no throughput is quoted.",
+          "TP2 x DP4 has only 122 KDA state blocks and 166K KV tokens per DP rank; it caps at 240",
+          "concurrent and was run at c<=512 with 960 admission.", ""]
 
     if s:
         L += ["### vLLM vs sglang decode at matched per-GPU load", "",

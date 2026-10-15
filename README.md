@@ -58,6 +58,27 @@ tp is TP16 (EP16, MoE output all-reduced; vLLM runs no a2a at DP=1).
 
 Percentages are tok/s relative to DeepEP v2 SM12 at the same concurrency.
 
+### vLLM: two independent single-node decode instances vs one cross-node EP16 instance
+
+Same prefill, same 16 decode GPUs, same TOTAL concurrency and admission cap; the router
+splits requests round-robin over the two instances, so per-GPU load is identical.
+Single-node DeepEP v2 runs EP8 over NVLink only (GIN type 3, direct kernels); the
+recipe-style TP8 arm uses no a2a at all (vLLM's DP=1 path: MoE all-reduced over NVLink).
+TP1 x DP8 does not fit: K3's ~93 GB of non-expert weights are replicated per GPU at TP1
+and EP8 holds 1/8 of the experts (~192 GB) -> OOM in weight load. DeepEP v2 SMs = auto (64).
+
+| conc (per GPU) | cross-node EP16 DP16, SM12 | 2 x 1-node EP8, TP2 x DP4 | 2 x 1-node EP8, TP4 x DP2 | 2 x 1-node TP8 (recipe, all-reduce) |
+|---|---|---|---|---|
+| 256 (16) | 4048 / 62.9 ms ×2 | 4044 / 52.5 ms †KV (-0.1%) | 5492 / 46.1 ms (+35.7%) | 6221 / 40.9 ms (+53.7%) |
+| 512 (32) | 6571 / 76.7 ms ×2 | not full (max 240 running, KV 1.00) | 9003 / 56.4 ms (+37.0%) | 9234 / 54.9 ms (+40.5%) |
+| 1024 (64) | 11371 / 87.4 ms ×3 | — | not full (max 680 running, KV 1.00) | 10352 / 89.1 ms †KV (-9.0%) |
+
+`†KV` = the KV pool hit 100% during the run (requests waited for blocks), so the number
+is a capacity ceiling, not the arm's decode speed at that load. `not full` = decode never
+reached 90% of the target concurrency (KV/state-bound), so no throughput is quoted.
+TP2 x DP4 has only 122 KDA state blocks and 166K KV tokens per DP rank; it caps at 240
+concurrent and was run at c<=512 with 960 admission.
+
 ### vLLM vs sglang decode at matched per-GPU load
 
 Same 4 hosts, same 2P2D split, same DeepEP (amazon 6de427b), NCCL 2.31.2, GIN type 5,
