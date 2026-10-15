@@ -88,6 +88,10 @@ case "$DECODE_MODE" in
             --all2all-backend deepep_v2
             --max-num-seqs $(( DECODE_SEQS_PER_RANK * T1N ))
             --max-num-batched-tokens "${DECODE_MAX_BATCHED:-$(( DECODE_SEQS_PER_RANK * T1N * 4 ))}"
+            # vLLM refuses to start unless ONE request at max_model_len fits:
+            # K3's 1M tokens need 27.29 GiB of KV and TP2 leaves 9.23 GiB. The
+            # bench is 3072 tokens/request; this changes no compute.
+            --max-model-len "${DECODE_MAX_MODEL_LEN:-8192}"
         )
         NIXL_HOST="$MY_IP"
         ;;
