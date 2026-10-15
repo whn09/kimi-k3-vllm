@@ -81,7 +81,7 @@ resolved_sms() {
     # grep -o, never per line: concurrent ranks glue records onto one line.
     v=$( { "${SSH[@]}" "$D0" "docker logs k3v-decode 2>&1"; "${SSH[@]}" "$D1" "docker logs k3v-decode 2>&1"; } \
         | grep -o -E 'DeepEP v2 num_sms=[0-9]+|DeepEP v2 dispatch/combine uses [0-9]+ SMs' \
-        | grep -o -E '[0-9]+' | sort | uniq -c)
+        | sed -E 's/.*(num_sms=|uses )([0-9]+).*/\2/' | sort | uniq -c)
     if [[ $(wc -l <<<"$v") -eq 1 && -n "$v" ]]; then awk '{print $2}' <<<"$v"
     else echo "mixed[$(tr -s ' \n' ' ' <<<"$v")]"; fi
 }
