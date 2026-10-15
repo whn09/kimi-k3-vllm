@@ -86,7 +86,10 @@ case "$DECODE_MODE" in
             --data-parallel-address "$MY_IP"
             --data-parallel-rpc-port "$DECODE_DP_RPC_PORT"
             --all2all-backend deepep_v2
-            --max-num-seqs $(( DECODE_SEQS_PER_RANK * T1N ))
+            # TP2 has only 122 KDA (mamba) state blocks per DP rank, so 128 cannot
+            # boot; DECODE_1N_SEQS_PER_DP caps it (TP2: 120 -> 960 total, so only
+            # c<=512 is admission-matched with the EP16 rows).
+            --max-num-seqs "${DECODE_1N_SEQS_PER_DP:-$(( DECODE_SEQS_PER_RANK * T1N ))}"
             --max-num-batched-tokens "${DECODE_MAX_BATCHED:-$(( DECODE_SEQS_PER_RANK * T1N * 4 ))}"
             # vLLM refuses to start unless ONE request at max_model_len fits:
             # K3's 1M tokens need 27.29 GiB of KV and TP2 leaves 9.23 GiB. The
@@ -127,7 +130,7 @@ docker run -d --name "$NAME" \
     -e VLLM_NIXL_SIDE_CHANNEL_HOST="$NIXL_HOST" \
     -e VLLM_NIXL_SIDE_CHANNEL_PORT="$DECODE_NIXL_PORT" \
     -e K3V_ROLE=decode -e K3V_DECODE_MODE="$DECODE_MODE" -e K3V_NODE_RANK="$NODE_RANK" -e K3V_KV_CONNECTOR="$KV_CONNECTOR" \
-    -e K3V_DECODE_TOTAL_SEQS="$DECODE_TOTAL_SEQS" \
+    -e K3V_DECODE_TOTAL_SEQS="$DECODE_TOTAL_SEQS" ${DECODE_1N_SEQS_PER_DP:+-e K3V_DECODE_1N_SEQS_PER_DP=$DECODE_1N_SEQS_PER_DP} \
     "$IMAGE" "${ARGS[@]}"
 
 echo "launched '$NAME'  mode=$DECODE_MODE  node-rank=$NODE_RANK/$NNODES  total-seqs=$DECODE_TOTAL_SEQS  ->  docker logs -f $NAME"
