@@ -28,7 +28,7 @@ PAT = re.compile(
     r"_isl(?P<isl>\d+)_osl(?P<osl>\d+)_c(?P<conc>\d+)_n(?P<n>\d+)"
     r"(?:_r(?P<rep>\d+))?(?:_img-(?P<img>[a-z0-9]+))?_(?P<ts>[\d-]+)\.json$"
 )
-ORDER = {"deepep_v2": 0, "deepep_v2_1n": 1, "agrs": 2, "tp": 3}
+ORDER = {"deepep_v2": 0, "deepep_v2_1n_tp2": 1, "deepep_v2_1n_tp4": 1, "agrs": 2, "tp": 3}
 
 
 def fmt(xs, nd=0):
@@ -55,8 +55,8 @@ def main(root):
         # to the SM sweep table.
         if mode == "deepep_v2" and sms != 12:
             continue
-        if mode == "deepep_v2_1n":
-            mode = f"deepep_v2_1n/sm{'auto' if sms == 0 else sms}"
+        if mode.startswith("deepep_v2_1n"):
+            mode = f"{mode}/sm{'auto' if sms == 0 else sms}"
         dpath = p.with_name(p.name[:-5] + ".decode.json")
         dec = json.loads(dpath.read_text()) if dpath.exists() else {}
         key = (m["kv"], int(m["isl"]), int(m["osl"]), int(m["conc"]), mode)
@@ -80,7 +80,7 @@ def main(root):
             rel = f"{rel_s} / {mean(tpot) / mean(bt) - 1:+.1%}"
         label = {"deepep_v2": "deepep_v2 (SM12, EP16 cross-node)"}.get(mode, mode)
         if mode.startswith("deepep_v2_1n"):
-            label = f"2 x deepep_v2 1-node EP8 ({mode.split('/')[1]})"
+            label = f"2 x 1-node EP8, {mode.split('/')[0].rsplit('_', 1)[1].upper()} attn ({mode.split('/')[1]})"
         imgs = "+".join(sorted({i for i, _, _ in rs}))
         mx = max(d.get("max_running", 0) or 0 for _, _, d in rs)
         ok = "/".join(f"{c['completed']}" for _, c, _ in rs)

@@ -1,0 +1,75 @@
+### prefill (TP16) on B300-1+B300-2
+b8eea46d02189c86757fd511e90891875bbe515e755bbf6fd2cd9fc950100bd0
+launched 'k3v-prefill'  node-rank=0/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+bd635f5f4c90a1a9a1aa0614ee9b7f234777ed00df2a9639402ca93f8c1ad71e
+launched 'k3v-prefill'  node-rank=1/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+  (headless: never binds :8001)
+  healthy: 172.31.10.219:8001
+### decode arm: deepep_v2_1n on B300-3+B300-4
+0986fcbf532447e05f0b12e07c56fd7b56de04583a94b9f098e685cbc266a61f
+launched 'k3v-decode'  mode=deepep_v2_1n  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  1-node instance: gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+3a46aa8dccb1e0d06cce568bbf8467814bb60ea62251f0f1fc03eb53fd89ec7f
+launched 'k3v-decode'  mode=deepep_v2_1n  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  1-node instance: gin=3 hca=ibp198s0f0 direct, deepep-sms=0(0=auto)
+FATAL: k3v-decode on B300-3 is 'exited' while waiting for 172.31.0.212:8002. Last log lines:
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     engine_core = DPEngineCoreProc(*args, **kwargs)
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2184, in __init__
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     super().__init__(
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     return func(*args, **kwargs)
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1194, in __init__
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     super().__init__(
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 144, in __init__
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     self.model_executor = executor_class(vllm_config)
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 116, in __init__
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     super().__init__(vllm_config)
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     return func(*args, **kwargs)
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/abstract.py", line 126, in __init__
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     self._init_executor()
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 215, in _init_executor
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     self.workers = WorkerProc.wait_for_ready(unready_workers)
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 815, in wait_for_ready
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510]     raise e from None
+(EngineCore_DP3 pid=923) ERROR 10-15 11:51:09 [core.py:1510] Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+Process EngineCore_DP3:
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1514, in run_engine_core
+    raise e
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1476, in run_engine_core
+    engine_core = DPEngineCoreProc(*args, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2184, in __init__
+    super().__init__(
+  File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1194, in __init__
+    super().__init__(
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 144, in __init__
+    self.model_executor = executor_class(vllm_config)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 116, in __init__
+    super().__init__(vllm_config)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/abstract.py", line 126, in __init__
+    self._init_executor()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 215, in _init_executor
+    self.workers = WorkerProc.wait_for_ready(unready_workers)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 815, in wait_for_ready
+    raise e from None
+Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+(MainProcess pid=386) INFO 10-15 11:51:10 [utils.py:628] [shutdown] Process manager: send sigterm to process VLLM_DP_Coordinator
