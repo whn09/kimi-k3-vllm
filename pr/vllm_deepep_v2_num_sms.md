@@ -23,7 +23,14 @@ Decode throughput is measured on the decode servers (`vllm:generation_tokens_tot
 
 The largest replicate-to-replicate spread of either arm is 3.6% (tok/s) / 1.4% (TPOT), below every delta.
 
-> **Draft status:** the table was measured with an equivalent out-of-tree patch on vLLM `77154ca` (same resolution logic and the same `dispatch(num_sms=...)` call). Validating this exact branch on the same hardware is pending, and the log lines (`DeepEP v2 dispatch/combine uses 12 SMs` / `64 SMs`) will be added here before this is marked ready for review.
+**Validated on this exact diff.** The PR's diff was applied with `patch` onto vLLM `77154ca` (the base of the table above; 3 of the 4 files are byte-identical to this PR's base, `envs.py` differs by a 1-line offset), same hardware and config, one decode boot per setting, c=1024:
+
+| `VLLM_DEEPEP_V2_NUM_SMS` | log line (`get_handle`) | decode tok/s | TPOT p50 |
+|---|---|---|---|
+| `12` | `DeepEP v2 dispatch/combine uses 12 SMs` | 11507 | 86.44 ms |
+| unset (`0`, default) | `DeepEP v2 dispatch/combine uses 64 SMs` | 9956 | 98.73 ms |
+
+Both reproduce the table above within its replicate spread (12: 11303 [11102-11505] / 87.87 ms; default: 10240 / 99.53 ms), and the default resolves to the same 64 SMs as before the change. All requests completed; greedy completions through the PD router were correct in both runs.
 
 Reproduce (decode side):
 

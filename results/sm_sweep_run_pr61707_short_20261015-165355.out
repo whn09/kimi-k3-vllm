@@ -1,0 +1,19 @@
+plan: sms=[12 0] x reps=1  seqs/rank=64 (side cap 1024)  ISL/OSL=1024/2048  concs=[1024]
+### prefill (TP16) on B300-1+B300-2
+  already healthy -- reusing
+### deepep_v2_sms12_r1
+52b0fcdfb2b02f7b37afae47e6cc802a01eeaebbe220bc69ed0148d246efb250
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+1059de902f9cc72bc6a07a9b8d212be696c76db16236874fb3becac537e9be93
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=12
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+7747434efda780c70d0dbd24b058a970df53a815736172ddd157aaabc6fc324b
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=mixed[ 2 12 2 2 ] (requested 12; 0 = auto)
+FATAL: ranks disagree on / never logged num_sms: 'mixed[ 2 12 2 2 ]'

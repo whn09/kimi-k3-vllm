@@ -1,0 +1,7 @@
+plan: sms=[12 0] x reps=1  seqs/rank=64 (side cap 1024)  ISL/OSL=1024/2048  concs=[<91_bench default>]
+### prefill (TP16) on B300-1+B300-2
+b8e3791cf5abafab32b0a5816da32bd86831c8b9147d2b6f0ad7397fc39e8461
+launched 'k3v-prefill'  node-rank=0/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+3ce049c84e6607eb82bb86d3d772a94bb3203eec9b33818fb9da5a6218985cf1
+launched 'k3v-prefill'  node-rank=1/2  tp=16 ep=16  head=172.31.10.219:8001  ->  docker logs -f k3v-prefill
+  (headless: never binds :8001)

@@ -1,0 +1,51 @@
+plan: sms=[0] x reps=1  seqs/rank=64 (side cap 1024)  ISL/OSL=1024/2048  concs=[1024]
+### prefill (TP16) on B300-1+B300-2
+  already healthy -- reusing
+### deepep_v2_sms0_r1
+1e3f408f2ed138ef4f6ab062901caf5e64e97f017718a6a457fc0530a853ad15
+launched 'k3v-decode'  mode=deepep_v2  node-rank=0/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+5f3f90b348a6fa1cbe72c1479b541f029d3a1a272c5fddc206b6c93d71d1d6c6
+launched 'k3v-decode'  mode=deepep_v2  node-rank=1/2  total-seqs=1024  ->  docker logs -f k3v-decode
+  gin=5 hca=rdmap deepep-sms=0
+  healthy: 172.31.0.212:8002
+  healthy: 172.31.9.249:8002
+router : 0.0.0.0:30000  kv=nixl decode-mode=deepep_v2
+  --prefill http://172.31.10.219:8001 --decode http://172.31.0.212:8002 --decode http://172.31.9.249:8002
+3bf308efe74b6d506ab06227dbf8b85506567be61eb63d76b20d25494738192f
+launched 'k3v-router'  ->  docker logs -f k3v-router
+  KV ok: smallest decode pool 1990039 tokens >= 196608 needed per rank
+  DeepEP resolved num_sms=64 (requested 0; 0 = auto)
+== warmup (not saved as a result)
+== k3v_pd2p2d_kv-nixl_dec-deepep_v2_sms0_seqs1024_isl1024_osl2048_c1024_n2048_r1_img-pr61707_20261015-092258  (resolved sms=64)
+Successful requests:                     2048      
+Benchmark duration (s):                  441.39    
+Output token throughput (tok/s):         9502.41   
+Mean TTFT (ms):                          10037.24  
+Median TTFT (ms):                        8534.10   
+Mean TPOT (ms):                          98.81     
+Median TPOT (ms):                        98.73     
+P99 TPOT (ms):                           99.57     
+Median ITL (ms):                         99.35     
+P99 ITL (ms):                            114.86    
+sampler: max_running=1024/1024 sat_window=391s sat_gen_tok_s=9955.947284813465
+pulled <- B300-1
+| image/kv | ISL/OSL | conc | SM (req -> used) | reps | decode-full tok/s | max running / target | TPOT p50 (ms) | ITL p50 (ms) | TPOT p99 (ms) | client out tok/s | dur (s) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| pr61707/nixl | 1024/2048 | 1024 | 12 -> 12 | 1 | 11507 | 1024 / 1024 | 86.44 | 87.43 | 86.99 | 9309 | 225 |
+| pr61707/nixl | 1024/2048 | 1024 | auto -> 64 | 1 | 9956 | 1024 / 1024 | 98.73 | 99.35 | 99.57 | 9502 | 441 |
+| sms1/nixl | 1024/2048 | 256 | 12 -> 12 | 2 | 4048 [4040-4056] | 256 / 256 | 62.87 [62.83-62.92] | 63.03 [62.98-63.08] | 62.96 [62.89-63.02] | 3903 [3799-4006] | 269 [262-276] |
+| sms1/nixl | 1024/2048 | 256 | auto -> 64 | 2 | 3601 [3598-3604] | 256 / 256 | 70.72 [70.61-70.83] | 70.92 [70.86-70.99] | 70.88 [70.87-70.88] | 3562 [3559-3565] | 294 [294-295] |
+| sms1/nixl | 1024/2048 | 512 | 12 -> 12 | 2 | 6571 [6518-6624] | 512 / 512 | 76.74 [76.56-76.91] | 77.02 [76.93-77.12] | 76.97 [76.86-77.09] | 6410 [6305-6514] | 327 [322-333] |
+| sms1/nixl | 1024/2048 | 512 | auto -> 64 | 2 | 5840 [5839-5841] | 512 / 512 | 87.26 [87.22-87.30] | 87.42 [87.40-87.45] | 87.47 [87.46-87.47] | 5754 [5754-5755] | 364 [364-364] |
+| sms1/nixl | 1024/2048 | 1024 | 12 -> 12 | 2 | 11303 [11102-11505] | 1024 / 1024 | 87.87 [87.26-88.48] | 88.38 [88.18-88.59] | 88.58 [88.43-88.73] | 10872 [10540-11205] | 386 [374-398] |
+| sms1/nixl | 1024/2048 | 1024 | auto -> 64 | 2 | 10240 [10239-10241] | 1024 / 1024 | 99.53 [99.51-99.55] | 99.54 [99.50-99.57] | 99.74 [99.71-99.77] | 9994 [9992-9995] | 420 [420-420] |
+
+**SM12 vs auto** (positive tok/s and negative TPOT favour SM12; noise = larger of the two arms' own max-min spread)
+
+| image/kv | ISL/OSL | conc | Δ decode-full tok/s | Δ TPOT p50 | noise (tok/s / TPOT) | verdict |
+|---|---|---|---|---|---|---|
+| pr61707/nixl | 1024/2048 | 1024 | +15.6% | -12.4% | 0.0% / 0.0% | 1 rep: no noise floor |
+| sms1/nixl | 1024/2048 | 256 | +12.4% | -11.1% | 0.4% / 0.3% | beats noise |
+| sms1/nixl | 1024/2048 | 512 | +12.5% | -12.1% | 1.6% / 0.5% | beats noise |
+| sms1/nixl | 1024/2048 | 1024 | +10.4% | -11.7% | 3.6% / 1.4% | beats noise |
